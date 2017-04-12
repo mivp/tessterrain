@@ -18,16 +18,17 @@ using namespace glm;
 namespace tessterrain {
 
 Terrain::Terrain(): m_material(0), m_initialized(false) {
-    
+   m_modelMatrix = glm::mat4(1.0); 
 }
 
 Terrain::~Terrain() {
-    if(m_material)
-        delete m_material;
+    //if(m_material)
+    //    delete m_material;
 }
 
 void Terrain::init(string configfile) {
-    
+    cout << "Config file: " << configfile << endl;
+
     INIReader reader(configfile);
     m_files.push_back(reader.Get("file", "heightmap", ""));
     m_files.push_back(reader.Get("file", "texture", ""));
@@ -57,7 +58,7 @@ void Terrain::printInfo() {
 */
 MeshTerrain::MeshTerrain(): Terrain(), m_vbo(0), m_vao(0), m_ibo(0), 
                             m_dataloaded(false), m_wireframe(false) {
-    m_material = new MeshMaterial();
+    
 }
 
 MeshTerrain::~MeshTerrain() {
@@ -290,7 +291,7 @@ void MeshTerrain::setup(){
         createMesh();
     
     if(!m_material)
-        return;
+        m_material = new MeshMaterial();
     
     glGenVertexArrays(1, &m_vao);
     glBindVertexArray(m_vao);
@@ -340,9 +341,7 @@ void MeshTerrain::render(const float MV[16], const float P[16]) {
     glm::mat4 projMatrix = cam->getProjectionMatrix();
 #else
     glm::mat4 viewMatrix = glm::make_mat4(MV);
-    viewMatrix = glm::transpose(viewMatrix);
     glm::mat4 projMatrix = glm::make_mat4(P);
-    projMatrix = glm::transpose(projMatrix);
 #endif
     glm::mat4 modelViewMatrix = viewMatrix * m_modelMatrix;
     glm::mat3 normalMatrix = glm::inverseTranspose(glm::mat3(modelViewMatrix));
@@ -371,8 +370,6 @@ void MeshTerrain::render(const float MV[16], const float P[16]) {
 TessTerrain::TessTerrain(): Terrain(), m_texHightmap(0), m_texGrass(0), m_texRock(0), m_texSnow(0),
                                             m_vbo(0), m_vao(0), m_initialized(false), m_displayMode(0) {
                                                 
-    m_material = new TessMaterial();
-                                                
     m_displayModeNames.push_back("shadeSimpleWireFrame");
     m_displayModeNames.push_back("shadeWorldHeight");
     m_displayModeNames.push_back("shadeWorldHeightWireFrame");
@@ -386,6 +383,7 @@ TessTerrain::TessTerrain(): Terrain(), m_texHightmap(0), m_texGrass(0), m_texRoc
 }
 
 TessTerrain::~TessTerrain() {
+#ifndef OMEGALIB_MODULE
     if(m_texHightmap)
         delete m_texHightmap;
     if(m_texGrass)
@@ -399,6 +397,7 @@ TessTerrain::~TessTerrain() {
         glDeleteVertexArrays(1,&m_vao);
         glDeleteBuffers(1,&m_vbo);
     }
+#endif
 }
 
 void TessTerrain::nextDisplayMode(bool forward) {
@@ -418,8 +417,8 @@ void TessTerrain::nextDisplayMode(bool forward) {
 void TessTerrain::setup(){
     
     if(!m_material)
-        return;
-    
+	m_material = new TessMaterial();
+   
     // textures
     m_texHightmap = new Texture("testdata/tess/heightmap-1024x1024.png", 0, false, GL_RGBA, GL_RGBA);
     m_texGrass = new Texture("testdata/tess/grass.png", 1, true, GL_RGB, GL_RGB);
@@ -469,8 +468,6 @@ void TessTerrain::setup(){
         m_displayModeSubroutines.push_back( glGetSubroutineIndex( shader->getHandle(), GL_FRAGMENT_SHADER, m_displayModeNames[i].c_str()) );
     }
     
-    m_modelMatrix = glm::mat4(1.0);
-    
     m_initialized = true;
 }
 
@@ -482,7 +479,7 @@ void TessTerrain::render(const float MV[16], const float P[16]) {
     
     if(!m_initialized)
         setup();
-    
+     
     GLSLProgram* shader = m_material->getShader();
     shader->bind();
     m_texHightmap->bind();
@@ -520,9 +517,9 @@ void TessTerrain::render(const float MV[16], const float P[16]) {
     glm::mat4 projMatrix = cam->getProjectionMatrix();
 #else
     glm::mat4 viewMatrix = glm::make_mat4(MV);
-    viewMatrix = glm::transpose(viewMatrix);
+    //viewMatrix = glm::transpose(viewMatrix);
     glm::mat4 projMatrix = glm::make_mat4(P);
-    projMatrix = glm::transpose(projMatrix);
+    //projMatrix = glm::transpose(projMatrix);
 #endif
     glm::mat4 modelViewMatrix = viewMatrix * m_modelMatrix;
     glm::mat3 worldNormalMatrix = glm::inverseTranspose(glm::mat3(m_modelMatrix));
@@ -562,6 +559,7 @@ void TessTerrain::render(const float MV[16], const float P[16]) {
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, 0);
     glUseProgram(0);
+    
 }
 
 void TessTerrain::calViewportMatrix(int width, int height) {

@@ -12,6 +12,7 @@ include_directories(
 	app/external/glm-0.9.4.0/
 	)
 
+message(${CMAKE_SOURCE_DIR})
 add_definitions(-DSHADER_DIR=\"${CMAKE_SOURCE_DIR}/shaders/\")
 add_definitions(-DOMEGALIB_MODULE)
 

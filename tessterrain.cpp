@@ -63,16 +63,19 @@ public:
         {
             glPushAttrib(GL_TEXTURE_BIT | GL_ENABLE_BIT | GL_CURRENT_BIT);
             client->getRenderer()->beginDraw3D(context);
-
+	
     	    if(module->visible)
     	    { 
-                if(!module->updateviewport)
+                if(!module->updateviewport && module->terrain) {
                     module->terrain->calViewportMatrix(context.viewport.width(), context.viewport.height());
-
-                float* MV = context.modelview.cast<float>().data();
-                float* P = context.projection.cast<float>().data();
+		    module->updateviewport = true;
+                }
+	        
+		float* MV = context.modelview.cast<float>().data();
+        	float* P = context.projection.cast<float>().data();
                 module->terrain->render(MV, P);
                 if(oglError) return;
+		
                 /*
     			// Test and draw
     			// get camera location in world coordinate
@@ -118,7 +121,7 @@ TessTerrainRenderModule* initialize()
 ///////////////////////////////////////////////////////////////////////////////
 // Python API
 #include "omega/PythonInterpreterWrapper.h"
-BOOST_PYTHON_MODULE(gigapoint)
+BOOST_PYTHON_MODULE(tessterrain)
 {
     //
     PYAPI_REF_BASE_CLASS(TessTerrainRenderModule)

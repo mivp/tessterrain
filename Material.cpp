@@ -32,6 +32,7 @@ MeshMaterial::~MeshMaterial() {
 /**
  */
 TessMaterial::TessMaterial(): Material() {
+
     m_shader = new GLSLProgram();
     string filename;
     filename = m_shaderDir; filename.append("terraintessellation.vert");
