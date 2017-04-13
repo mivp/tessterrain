@@ -17,21 +17,47 @@ using namespace glm;
 
 namespace tessterrain {
 
-Terrain::Terrain(): m_material(0), m_initialized(false) {
-   m_modelMatrix = glm::mat4(1.0); 
+/**
+ Tessellation Terrain
+ */
+TessTerrain::TessTerrain(): m_material(0), m_initialized(false), m_texHightmap(0), m_texture(0),
+                            m_vbo(0), m_vao(0),  m_displayMode(0) {
+                                                
+    m_displayModeNames.push_back("shadeSimpleWireFrame");
+    m_displayModeNames.push_back("shadeWorldHeight");
+    m_displayModeNames.push_back("shadeWorldHeightWireFrame");
+    m_displayModeNames.push_back("shadeWorldNormal");
+    m_displayModeNames.push_back("shadeLightingFactors");
+    m_displayModeNames.push_back("shadeTextured");
+    m_displayModeNames.push_back("shadeTexturedAndLit");
 }
 
-Terrain::~Terrain() {
-    //if(m_material)
-    //    delete m_material;
+TessTerrain::~TessTerrain() {
+#ifndef OMEGALIB_MODULE
+    if(m_texHightmap)
+        delete m_texHightmap;
+    if(m_texture)
+        delete m_texture;
+    if(m_vao > 0) {
+        glDeleteVertexArrays(1,&m_vao);
+        glDeleteBuffers(1,&m_vbo);
+    }
+#endif
 }
-
-void Terrain::init(string configfile) {
+    
+void TessTerrain::init(string configfile) {
     cout << "Config file: " << configfile << endl;
 
     INIReader reader(configfile);
-    m_files.push_back(reader.Get("file", "heightmap", ""));
-    m_files.push_back(reader.Get("file", "texture", ""));
+    string str = reader.Get("file", "heightmap", "");
+    if(str.length() == 0) {
+        cout << "ERROR: no highmap" << endl;
+        exit(1);
+    }
+    m_files.push_back(str);
+    str = reader.Get("file", "texture", "");
+    if(str.length() > 0)
+        m_files.push_back(str);
     
     m_lefttop = glm::vec2(reader.GetInteger("topleft", "left", 0), reader.GetInteger("topleft", "top", 0));
     
@@ -40,367 +66,19 @@ void Terrain::init(string configfile) {
     m_heightRange = glm::vec2(reader.GetReal("heightrange", "min", 0), reader.GetReal("heightrange", "max", 1));
     
     //TODO: translate and update m_modelMatrix
-  
-    m_initialized = true;
-    
 }
 
-void Terrain::printInfo() {
+void TessTerrain::printInfo() {
+    
     for (int i=0; i < m_files.size(); i++)
         cout << "file: " << m_files[i] << endl;
     cout << "left: " << m_lefttop[0] << " top: " << m_lefttop[1] << endl;
     cout << "wres: " << m_horizontalRes[0] << " hres: " << m_horizontalRes[1] << endl;
     cout << "h min: " << m_heightRange[0] << " h max: " << m_heightRange[1] << endl;
 }
-
-/**
- Mesh Terrain
-*/
-MeshTerrain::MeshTerrain(): Terrain(), m_vbo(0), m_vao(0), m_ibo(0), 
-                            m_dataloaded(false), m_wireframe(false) {
     
-}
-
-MeshTerrain::~MeshTerrain() {
-    if(m_vao > 0) {
-        glDeleteVertexArrays(1,&m_vao);
-        glDeleteBuffers(1,&m_vbo);
-        glDeleteBuffers(1,&m_ibo);
-    }
-}
-
-int MeshTerrain::loadHeightMap() {
-    
-    int width, height, n;
-    unsigned char *data = stbi_load(m_files[0].c_str(), &width, &height, &n, 0);
-    
-    if(!data) {
-        cout << "Failed to load highmap file " << m_files[0] << endl;
-        exit(0);
-    }
-    
-    cout << "width: " << width << " height: " << height << " comps: " << n << endl;
-    m_size = glm::vec2(width, height);
-    
-    // highmap data
-    m_heightmap = vector< vector<float> >(height, vector<float> (width, 0));
-    
-    float hrange = m_heightRange[1] - m_heightRange[0];
-    int striplen = n*width;
-    
-    for(int row = 0; row < height; row++) {
-        for(int col = 0; col < width; col++) {
-            m_heightmap[row][col] = (float)data[row*striplen + col*n] * hrange / 255 + m_heightRange[0];
-        }
-    }
-
-  	cout << "some values" << endl;
-    for(int r =0; r < 5; r++) {
-        for(int c=0; c < 10; c++)
-            cout << m_heightmap[r][c] << " ";
-        cout << endl;
-    }
-	
-	return 0;
-}
-
-vec3 MeshTerrain::computeNormal(vec3 center, int row, int col)
-{
-    // Compute center of all values which is the i and j passed in
-    vec3 left;
-    vec3 right;
-    vec3 up;
-    vec3 down;
-    vec3 sum = vec3(0,0,0);
-    bool l = false;
-    bool r = false;
-    bool u = false;
-    bool d = false;
-    
-    float wres = m_horizontalRes[0];
-    float hres = m_horizontalRes[1];
-    float width = m_size[0];
-    float height = m_size[1];
-    
-    
-    int count = 0;
-    // Compute left
-    if(col -1 >= 0) {
-        left = vec3((col-1)*wres, m_heightmap[row][col-1], row*hres);
-        left = center - left;
-        l = true;
-    }
-    
-    // Compute right
-    if(col+1 < width) {
-        right = vec3((col+1)*wres, m_heightmap[row][col+1], row*hres);
-        right = center - right;
-        r = true;
-    }
-    
-    // Compute up
-    if(row-1 >= 0) {
-        up = vec3(col*wres, m_heightmap[row-1][col], (row-1)*hres);
-        up = center-up;
-        u = true;
-    }
-    
-    // Compute down
-    if(row+1 < height) {
-        down = vec3(col*wres, m_heightmap[row+1][col], (row+1)*hres);
-        down = center-down;
-        d = true;
-    }
-    
-    // Compute normals
-    if(u  && r) {
-        vec3 v1 = cross(up,right);
-        if(v1.y < 0)
-            v1 *= -1;
-        sum += v1;
-        count = count + 1;
-    }
-    
-    if(u && l) {
-        vec3 v1 = cross(up,left);
-        if(v1.y < 0)
-            v1 *= -1;
-        sum += v1;
-        count = count + 1;
-    }
-    
-    if(d && r) {
-        vec3 v1 = cross(down,right);
-        if(v1.y < 0)
-            v1 *= -1;
-        sum += v1;
-        count = count + 1;
-    }
-    
-    if(d && l) {
-        vec3 v1 = cross(down,left);
-        if(v1.y < 0)
-            v1 *= -1;
-        sum += v1;
-        count = count + 1;
-    }
-    
-    // Compute average normal
-    sum /= count;
-    
-    // Normalize it and return :D!!!! Enjoy your smoothed normal for some smooth shading!
-    return normalize(sum);
-};
-
-int MeshTerrain::createMesh() {
-	
-    loadHeightMap();
-
-	vertexes.clear();
-	indices.clear();
-    
-    float wres = m_horizontalRes[0];
-    float hres = m_horizontalRes[1];
-    float width = m_size[0];
-    float height = m_size[1];
-
-	for(int r = 0; r < height-1; r++) {
-
-		for(int c = 0; c < width-1; c++) {
-
-		    float UL = m_heightmap[r][c]; // Upper left
-		    float LL = m_heightmap[r+1][c]; // Lower left
-		    float UR = m_heightmap[r][c+1]; // Upper right
-		    float LR = m_heightmap[r+1][c+1]; // Lower right
-		    
-		    vec3 ULV = vec3(c*wres, UL, r*hres);
-		    vec3 LLV = vec3(c*wres, LL, (r+1)*hres);
-		    vec3 URV = vec3((c+1)*wres, UR, r*hres);
-		    vec3 LRV = vec3((c+1)*wres, LR, (r+1)*hres);
-
-		    // compute smoothed normal
-		    vec3 va = computeNormal(ULV, r, c);
-		    vec3 vb = computeNormal(LLV, r+1, c);
-		    vec3 vc = computeNormal(URV, r, c+1);
-		    vec3 vd = computeNormal(LRV, r+1, c+1);
-
-		    // Push back vector information for these group of dots
-		    vertexes.push_back(Vertex(vec3(c*wres, UL, r*hres), va, vec2((float)c/width,(float)r/height)) );
-		    vertexes.push_back(Vertex(vec3(c*wres, LL, (r+1)*hres), vb, vec2((float)c/width,(float)(r+1)/height)) );
-		    vertexes.push_back(Vertex(vec3((c+1)*wres, UR, r*hres), vc, vec2((float)(c+1)/width,(float)r/height)) );
-		    vertexes.push_back(Vertex(vec3((c+1)*wres, LR, (r+1)*hres), vd, vec2((float)(c+1)/width,(float)(r+1)/height)) );
-
-		    // Push back indices for these vertexes
-		    indices.push_back(vertexes.size() - 4);
-		    indices.push_back(vertexes.size() - 1);
-		    indices.push_back(vertexes.size() - 2);
-		    indices.push_back(vertexes.size() - 4);
-		    indices.push_back(vertexes.size() - 3);
-		    indices.push_back(vertexes.size() - 1);
-		}
-	}
-    
-    m_dataloaded = true;
-
-	return 0;
-}
-
-
-int MeshTerrain::saveMeshToObj(string filename) {
-
-    /*
-    ofstream fout(filename, std::ofstream::out);
-
-	if (!fout.is_open()) {
-  		cout << "Unable to open file to write" << filename << endl;
-  		return 0;
-  	}
-
-  	cout << "Number of vertexes: " << vertexes.size() << " faces: " << indices.size()/3 << endl;
-    
-    //fout << "o map" << endl;
-    fout << "mtllib sw_lr.tif.txt.mtl" << endl;
-    //fout << "mtllib mel_small.tif.txt.mtl" << endl;
-    
-    cout << "write vertexes" << endl;
-    for(int i=0; i < vertexes.size(); i++) {
-        fout << "v " << vertexes[i].position[0] << " " << vertexes[i].position[1] << " " << vertexes[i].position[2] << endl;
-        fout << "vt " << vertexes[i].uv[0] << " " << vertexes[i].uv[1] << endl;
-        fout << "vn " << vertexes[i].normal[0] << " " << vertexes[i].normal[1] << " " << vertexes[i].normal[2] << endl;
-    }
-
-  	// indices
-    cout << "write faces..." << endl;
-  	//fout << "# faces" << endl;
-    //fout << "g map" << endl;
-    fout << "usemtl image" << endl;
-    for(int i=0; i < indices.size(); i+=3)
-        fout << "f " << indices[i]+1 << "/" << indices[i]+1 << "/" << indices[i]+1 << " "
-                     << indices[i+1]+1 << "/" << indices[i+1]+1 << "/" << indices[i+1]+1 << " "
-                     << indices[i+2]+1 << "/" << indices[i+2]+1 << "/" << indices[i+2]+1 << endl;
-    
-  	fout.close();
-    */
-
-	return 0;
-}
-
-void MeshTerrain::setup(){
-    
-    if(!m_dataloaded)
-        createMesh();
-    
-    if(!m_material)
-        m_material = new MeshMaterial();
-    
-    glGenVertexArrays(1, &m_vao);
-    glBindVertexArray(m_vao);
-    
-    // create vbo
-    glGenBuffers(1,&m_vbo);
-    glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex)*vertexes.size(), &vertexes[0], GL_STATIC_DRAW);
-    
-    GLSLProgram* shader = m_material->getShader();
-    //shader->bind();
-    unsigned int val;
-  
-    val = glGetAttribLocation(shader->getHandle(), "aPosition");
-    glEnableVertexAttribArray(val);
-    glVertexAttribPointer( val,  3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, position));
-    
-    val = glGetAttribLocation(shader->getHandle(), "aNormal");
-    glEnableVertexAttribArray(val);
-    glVertexAttribPointer( val,  3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, normal));
-    
-    val = glGetAttribLocation(shader->getHandle(), "aTexCoord");
-    glEnableVertexAttribArray(val);
-    glVertexAttribPointer( val,  2, GL_FLOAT, GL_TRUE, sizeof(Vertex), (void*)offsetof(Vertex, uv));
-    
-    // create ibo
-    glGenBuffers(1,&m_ibo);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ibo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int)*indices.size(), &indices[0], GL_STATIC_DRAW);
-    
-    glBindVertexArray(0);
-    
-}
-
-#ifndef OMEGALIB_MODULE
-void MeshTerrain::render(Camera* cam) {
-#else
-void MeshTerrain::render(const float MV[16], const float P[16]) {
-#endif
-    if(~m_vao)
-        setup();
-    
-    GLSLProgram* shader = m_material->getShader();
-    shader->bind();
-#ifndef OMEGALIB_MODULE
-    glm::mat4 viewMatrix = cam->getViewMatrix();
-    glm::mat4 projMatrix = cam->getProjectionMatrix();
-#else
-    glm::mat4 viewMatrix = glm::make_mat4(MV);
-    glm::mat4 projMatrix = glm::make_mat4(P);
-#endif
-    glm::mat4 modelViewMatrix = viewMatrix * m_modelMatrix;
-    glm::mat3 normalMatrix = glm::inverseTranspose(glm::mat3(modelViewMatrix));
-    glm::mat4 mvp = projMatrix * modelViewMatrix;
-  
-    shader->setUniform("uMVP", mvp);
-    shader->setUniform("uNormalMatrix", normalMatrix);
-    
-    if(m_wireframe)
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    
-    glBindVertexArray(m_vao);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ibo);
-    
-    glDrawElements( GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, (void*)0 );
-    
-    if(m_wireframe)
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    
-    glBindVertexArray(0);
-}
-
-/**
- Tessellation Terrain
- */
-TessTerrain::TessTerrain(): Terrain(), m_texHightmap(0), m_texGrass(0), m_texRock(0), m_texSnow(0),
-                                            m_vbo(0), m_vao(0), m_initialized(false), m_displayMode(0) {
-                                                
-    m_displayModeNames.push_back("shadeSimpleWireFrame");
-    m_displayModeNames.push_back("shadeWorldHeight");
-    m_displayModeNames.push_back("shadeWorldHeightWireFrame");
-    m_displayModeNames.push_back("shadeWorldNormal");
-    m_displayModeNames.push_back("shadeGrass");
-    m_displayModeNames.push_back("shadeGrassAndRocks");
-    m_displayModeNames.push_back("shadeGrassRocksAndSnow");
-    m_displayModeNames.push_back("shadeLightingFactors");
-    m_displayModeNames.push_back("shadeTexturedAndLit");
-                                              
-}
-
-TessTerrain::~TessTerrain() {
-#ifndef OMEGALIB_MODULE
-    if(m_texHightmap)
-        delete m_texHightmap;
-    if(m_texGrass)
-        delete m_texGrass;
-    if(m_texRock)
-        delete m_texRock;
-    if(m_texSnow)
-        delete m_texSnow;
-    
-    if(m_vao > 0) {
-        glDeleteVertexArrays(1,&m_vao);
-        glDeleteBuffers(1,&m_vbo);
-    }
-#endif
-}
-
 void TessTerrain::nextDisplayMode(bool forward) {
+    
     if(forward) {
         m_displayMode++;
         if(m_displayMode >= DisplayModeCount)
@@ -411,19 +89,27 @@ void TessTerrain::nextDisplayMode(bool forward) {
         if(m_displayMode < 0)
             m_displayMode = DisplayModeCount - 1;
     }
+    
+    if(!m_texture && (m_displayMode == Textured || m_displayMode == TexturedAndLit) )
+        nextDisplayMode(forward);
+        
     cout << "display mdoe: " << m_displayModeNames[m_displayMode] << endl;
+}
+    
+void TessTerrain::moveTo(glm::vec3 pos) {
+    m_modelMatrix = glm::mat4(1.0);
+    m_modelMatrix = glm::translate(m_modelMatrix, pos);
 }
 
 void TessTerrain::setup(){
     
     if(!m_material)
-	m_material = new TessMaterial();
+        m_material = new TessMaterial();
    
     // textures
-    m_texHightmap = new Texture("testdata/tess/heightmap-1024x1024.png", 0, false, GL_RGBA, GL_RGBA);
-    m_texGrass = new Texture("testdata/tess/grass.png", 1, true, GL_RGB, GL_RGB);
-    m_texRock = new Texture("testdata/tess/rock.png", 2, true, GL_RGB, GL_RGB);
-    m_texSnow = new Texture("testdata/tess/snowrocks.png", 3, true, GL_RGB, GL_RGB);
+    m_texHightmap = new Texture(m_files[0].c_str(), 0, false);
+    if(m_files.size() > 1)
+        m_texture = new Texture(m_files[1].c_str(), 1, true);
     
     // patches
     const int maxTessellationLevel = 64;
@@ -456,7 +142,7 @@ void TessTerrain::setup(){
     glBufferData(GL_ARRAY_BUFFER, positionData.size() * sizeof( float ), &positionData[0], GL_STATIC_DRAW);
     
     GLSLProgram* shader = m_material->getShader();
-    shader->bind();
+    //shader->bind();
     unsigned int val = glGetAttribLocation(shader->getHandle(), "vertexPosition");
     glEnableVertexAttribArray(val);
     glVertexAttribPointer(val, 2, GL_FLOAT, GL_FALSE, 2*sizeof(float), (const GLvoid*)0);
@@ -467,6 +153,16 @@ void TessTerrain::setup(){
     for ( int i = 0; i < DisplayModeCount; ++i){
         m_displayModeSubroutines.push_back( glGetSubroutineIndex( shader->getHandle(), GL_FRAGMENT_SHADER, m_displayModeNames[i].c_str()) );
     }
+    
+    // cal values
+    m_horizontalScale = glm::vec2(m_horizontalRes[0] * m_texHightmap->getWidth(), m_horizontalRes[1] * m_texHightmap->getHeight());
+    if(m_horizontalScale[1] < 0)
+        m_horizontalScale[1] *= -1;
+    m_verticalScale = glm::vec2(m_heightRange[0], m_heightRange[1]-m_heightRange[0]);
+    
+    m_verticalScale = 3.0f * m_verticalScale;
+    cout << "horizontal scale: " << m_horizontalScale[0] << " " << m_horizontalScale[1] << endl;
+    cout << "vertical scale: " << m_verticalScale[0] << " " << m_verticalScale[1] << endl;
     
     m_initialized = true;
 }
@@ -483,17 +179,15 @@ void TessTerrain::render(const float MV[16], const float P[16]) {
     GLSLProgram* shader = m_material->getShader();
     shader->bind();
     m_texHightmap->bind();
-    m_texGrass->bind();
-    m_texRock->bind();
-    m_texSnow->bind();
+    if(m_texture)
+        m_texture->bind();
     
     glUniformSubroutinesuiv( GL_FRAGMENT_SHADER, 1, &m_displayModeSubroutines[m_displayMode] );
     
     //texture
     shader->setUniform( "heightMap", (int) m_texHightmap->index );
-    shader->setUniform( "grassTexture", (int) m_texGrass->index );
-    shader->setUniform( "rockTexture", (int) m_texRock->index );
-    shader->setUniform( "snowTexture", (int) m_texSnow->index );
+    if(m_texture)
+        shader->setUniform( "tex0", (int) m_texture->index );
     
     //uniforms
     shader->setUniform( "line.width", 1.0f );
@@ -505,8 +199,8 @@ void TessTerrain::render(const float MV[16], const float P[16]) {
     shader->setUniform( "fog.maxDistance", 800.0f );
     
     // scales
-    shader->setUniform( "horizontalScale", 500.0f );
-    shader->setUniform( "verticalScale", 20.0f );
+    shader->setUniform( "horizontalScale", m_horizontalScale );
+    shader->setUniform( "verticalScale", m_verticalScale );
     shader->setUniform( "pixelsPerTriangleEdge", 12.0f );
     shader->setUniform( "maxTrianglesPerTexel", (int)1);
     shader->setUniform( "viewportSize", m_viewportSize);
@@ -545,6 +239,12 @@ void TessTerrain::render(const float MV[16], const float P[16]) {
     shader->setUniform( "material.Kd",  glm::vec3( 1.0f, 1.0f, 1.0f ) );
     shader->setUniform( "material.Ks",  glm::vec3( 0.3f, 0.3f, 0.3f ) );
     shader->setUniform( "material.shininess", 10.0f );
+    
+    shader->setUniform( "colorStop1", 0.0f );
+    shader->setUniform( "colorStop2", float(m_verticalScale[0] + 0.2*m_verticalScale[1]) );
+    shader->setUniform( "colorStop3", float(m_verticalScale[0] + 0.4*m_verticalScale[1]) );
+    shader->setUniform( "colorStop4", float(m_verticalScale[0] + 0.6*m_verticalScale[1]) );
+    shader->setUniform( "colorStop5", float(m_verticalScale[0] + 0.8*m_verticalScale[1]) );
     
     // draw
     glEnable(GL_DEPTH_TEST);

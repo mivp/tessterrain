@@ -28,20 +28,25 @@ uniform struct MaterialInfo
     float shininess;    // Specular shininess exponent
 } material;
 
-uniform sampler2D grassTexture;
-uniform sampler2D rockTexture;
-uniform sampler2D snowTexture;
+uniform sampler2D tex0;
 
 uniform float colorStop1 = 0.0;
 uniform float colorStop2 = 4.0;
 uniform float colorStop3 = 8.0;
 uniform float colorStop4 = 12.0;
+uniform float colorStop5 = 16.0;
 
-//uniform vec4 color1 = vec4( 0.00, 0.55, 0.00, 1.00 );
+/*
 uniform vec4 color1 = vec4( 0.00, 0.00, 0.55, 1.00 );
 uniform vec4 color2 = vec4( 0.89, 0.68, 0.00, 1.00 );
 uniform vec4 color3 = vec4( 0.75, 0.00, 0.00, 1.00 );
 uniform vec4 color4 = vec4( 1.00, 1.00, 1.00, 1.00 );
+*/
+uniform vec4 color1 = vec4( 0.27, 0.00, 0.53, 1.00 );
+uniform vec4 color2 = vec4( 0.11, 0.51, 0.73, 1.00 );
+uniform vec4 color3 = vec4( 0.42, 0.76, 0.36, 1.00 );
+uniform vec4 color4 = vec4( 0.92, 0.75, 0.34, 1.00 );
+uniform vec4 color5 = vec4( 1.00, 1.00, 0.53, 1.00 );
 
 in wireFrameVertex {
     noperspective vec3 edgeDistance;
@@ -76,6 +81,11 @@ vec4 linearGradient( const in float t )
     {
         float tLocal = ( t - colorStop3 ) / ( colorStop4 - colorStop3 );
         color = mix( color3, color4, tLocal );
+    }
+    else if ( t < colorStop5 )
+    {
+        float tLocal = ( t - colorStop4 ) / ( colorStop5 - colorStop4 );
+        color = mix( color4, color5, tLocal );
     }
     else
     {
@@ -139,18 +149,6 @@ vec4 wireFrame( const in vec4 color, const in vec4 wireFrameColor )
     return c;
 }
 
-float textureDistanceBlendFactor()
-{
-    float dist = abs( position.z );
-    return ( dist - 30.0 ) / ( 30.0 - 5.0 );
-}
-
-void nearAndFarTexCoords( out vec2 uvNear, out vec2 uvFar )
-{
-    uvNear = texCoords * 100.0;
-    uvFar = texCoords * 10.0;
-}
-
 // ShaderModelType Subroutines
 subroutine( ShaderModelType )
 vec4 shadeSimpleWireFrame()
@@ -180,71 +178,6 @@ vec4 shadeWorldNormal()
 }
 
 subroutine( ShaderModelType )
-vec4 shadeGrass()
-{
-    vec2 uvNear, uvFar;
-    nearAndFarTexCoords( uvNear, uvFar );
-    float textureDistanceFactor = textureDistanceBlendFactor();
-
-    // Get grass texture color
-    vec4 grassNear = texture( grassTexture, uvNear );
-    vec4 grassFar = texture( grassTexture, texCoords );
-    vec4 grassColor = mix( grassNear, grassFar, textureDistanceFactor );
-    return grassColor;
-}
-
-subroutine( ShaderModelType )
-vec4 shadeGrassAndRocks()
-{
-    vec2 uvNear, uvFar;
-    nearAndFarTexCoords( uvNear, uvFar );
-    float textureDistanceFactor = textureDistanceBlendFactor();
-
-    // Get grass texture color
-    vec4 grassNear = texture( grassTexture, uvNear );
-    vec4 grassFar = texture( grassTexture, texCoords );
-    vec4 grassColor = mix( grassNear, grassFar, textureDistanceFactor );
-
-    // Get rock texture color
-    vec4 rockNear = texture( rockTexture, uvNear );
-    vec4 rockFar = texture( rockTexture, uvFar );
-    vec4 rockColor = mix( rockNear, rockFar, textureDistanceFactor );
-
-    // Blend rock and grass texture based upon the worldNormal vector
-    vec4 grassRockColor = mix( rockColor, grassColor, smoothstep( 0.75, 0.95, clamp( worldNormal.y, 0.0, 1.0 ) ) );
-    return grassRockColor;
-}
-
-subroutine( ShaderModelType )
-vec4 shadeGrassRocksAndSnow()
-{
-    vec2 uvNear, uvFar;
-    nearAndFarTexCoords( uvNear, uvFar );
-    float textureDistanceFactor = textureDistanceBlendFactor();
-
-    // Get grass texture color
-    vec4 grassNear = texture( grassTexture, uvNear );
-    vec4 grassFar = texture( grassTexture, texCoords );
-    vec4 grassColor = mix( grassNear, grassFar, textureDistanceFactor );
-
-    // Get rock texture color
-    vec4 rockNear = texture( rockTexture, uvNear );
-    vec4 rockFar = texture( rockTexture, uvFar );
-    vec4 rockColor = mix( rockNear, rockFar, textureDistanceFactor );
-
-    // Blend rock and grass texture based upon the worldNormal vector
-    vec4 grassRockColor = mix( rockColor, grassColor, smoothstep( 0.75, 0.95, clamp( worldNormal.y, 0.0, 1.0 ) ) );
-
-    // Now blend with snow based upon world height
-    vec4 snowNear = texture( snowTexture, uvNear );
-    vec4 snowFar = texture( snowTexture, 5.0 * uvFar );
-    vec4 snowColor = mix( snowNear, snowFar, textureDistanceFactor );
-
-    vec4 diffuseColor = mix( grassRockColor, snowColor, smoothstep( 10.0, 15.0, worldPosition.y ) );
-    return diffuseColor;
-}
-
-subroutine( ShaderModelType )
 vec4 shadeLightingFactors()
 {
     vec3 ambientAndDiff, spec;
@@ -254,36 +187,21 @@ vec4 shadeLightingFactors()
 }
 
 subroutine( ShaderModelType )
+vec4 shadeTextured()
+{
+    return texture (tex0, texCoords);
+}
+
+subroutine( ShaderModelType )
 vec4 shadeTexturedAndLit()
 {
-    vec2 uvNear, uvFar;
-    nearAndFarTexCoords( uvNear, uvFar );
-    float textureDistanceFactor = textureDistanceBlendFactor();
-
-    // Get grass texture color
-    vec4 grassNear = texture( grassTexture, uvNear );
-    vec4 grassFar = texture( grassTexture, texCoords );
-    vec4 grassColor = mix( grassNear, grassFar, textureDistanceFactor );
-
-    // Get rock texture color
-    vec4 rockNear = texture( rockTexture, uvNear );
-    vec4 rockFar = texture( rockTexture, uvFar );
-    vec4 rockColor = mix( rockNear, rockFar, textureDistanceFactor );
-
-    // Blend rock and grass texture based upon the worldNormal vector
-    vec4 grassRockColor = mix( rockColor, grassColor, smoothstep( 0.75, 0.95, clamp( worldNormal.y, 0.0, 1.0 ) ) );
-
-    // Now blend with snow based upon world height
-    vec4 snowNear = texture( snowTexture, uvNear );
-    vec4 snowFar = texture( snowTexture, 5.0 * uvFar );
-    vec4 snowColor = mix( snowNear, snowFar, textureDistanceFactor );
-
-    vec4 diffuseColor = mix( grassRockColor, snowColor, smoothstep( 10.0, 15.0, worldPosition.y ) );
+    // Get texture color
+    vec4 texColor = texture (tex0, texCoords);
 
     // Calculate the lighting model, keeping the specular component separate
     vec3 ambientAndDiff, spec;
     phongModel( ambientAndDiff, spec );
-    vec4 color = vec4( ambientAndDiff, 1.0 ) * diffuseColor + vec4( spec, 1.0 );
+    vec4 color = vec4( ambientAndDiff, 1.0 ) * texColor + vec4( spec, 1.0 );
     return color;
 }
 
@@ -293,8 +211,11 @@ void main()
     vec4 c = shaderModel();
 
     // Blend with fog color
+    /*
     float dist = abs( position.z );
     float fogFactor = ( fog.maxDistance - dist ) / ( fog.maxDistance - fog.minDistance );
     fogFactor = clamp( fogFactor, 0.0, 1.0 );
     fragColor = mix( fog.color, c, fogFactor );
+    */
+    fragColor = c;
 }

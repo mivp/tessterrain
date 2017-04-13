@@ -13,7 +13,7 @@ const unsigned int Texture::NEAREST = GL_NEAREST;
 const unsigned int Texture::MIPMAP = GL_LINEAR_MIPMAP_LINEAR;
 
 // for colormap
-Texture::Texture(const char* filename, unsigned int ind, bool mipmap, unsigned int _format, unsigned int _globalFormat) {
+Texture::Texture(const char* filename, unsigned int ind, bool mipmap) {
     
     int x,y,n;
     unsigned char *data = stbi_load(filename, &x, &y, &n, 0);
@@ -34,8 +34,13 @@ Texture::Texture(const char* filename, unsigned int ind, bool mipmap, unsigned i
     glunit = unitFromIndex(index);
     minFilter = GL_LINEAR;
     magFilter = GL_LINEAR;
-    format = _format;
-    globalFormat = _globalFormat;
+    if(n == 1)
+        format = globalFormat = GL_RED;
+    else if (n == 3)
+        format = globalFormat = GL_RGB;
+    else
+        format = globalFormat = GL_RGBA;
+    
     glActiveTexture(glunit);
     glGenTextures(1, &gluid);
     glBindTexture(GL_TEXTURE_2D, gluid);

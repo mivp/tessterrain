@@ -2,6 +2,7 @@
 #include "GLUtils.h"
 #include "../Terrain.h"
 #include "../Material.h"
+#include "Mesh.h"
 #include "Camera.h"
 
 #include <sstream>
@@ -25,8 +26,44 @@ float dt = 0;
 #define WIDTH 1024
 #define HEIGHT 768
 
-MeshTerrain* meshTerrain = NULL;
+int num_stations = 15;
+float stations_loc[] = { 160402.9471,	-17475.40462,
+                180613.7694,	-13013.93085,
+                24009.54937,	-140865.6317,
+                196989.2673,	-199541.8009,
+                9745.799399,	-43540.72124,
+                1654.490005,	-81777.5427,
+                75112.57052,	-54721.81954,
+                136297.368,	-105817.4026,
+                226552.3343,	-129560.873,
+                125953.6075,	-17759.42934,
+                85932.77134,	-139460.1383,
+                18403.31902,	-126929.3307,
+                30767.35127,	-130943.0376,
+                106228.4206,	-129170.4682,
+                153934.4218,	-65907.53298 };
+
+float stations_height[] =
+{   295,
+    875,
+    45.4,
+    82,
+    130.6,
+    51,
+    241.1,
+    130,
+    261,
+    1150,
+    10,
+    80.9,
+    0,
+    70.8,
+    226};
+
 TessTerrain* tessTerrain = NULL;
+TessTerrain* tessTerrain2 = NULL;
+vector<Mesh*> stations;
+
 Camera* camera = NULL;
 
 int currentkey = -1;
@@ -131,32 +168,52 @@ void init_resources()
     // test tessellation terrain
     
     camera = new Camera();
-    camera->position = glm::vec3(294.059, 85.6822, 559.623);
-    camera->front = glm::vec3(-0.0794522, -0.407484, -0.90975);
+    //camera->position = glm::vec3(294.059, 85.6822, 559.623);
+    //camera->front = glm::vec3(-0.0794522, -0.407484, -0.90975);
+    camera->position = glm::vec3(73823.5, 97650, 148957);
+    camera->front = glm::vec3(0.0522058, -0.772296, -0.633114);
     camera->ratio = 1.0*WIDTH/HEIGHT;
-    camera->movementSpeed = 100;
-    camera->pitch = -24.0469;
-    camera->yaw = -94.9912;
+    camera->movementSpeed = 10000;
+    camera->pitch = -50.5605;
+    camera->yaw = -85.2861;
+    camera->near = 100.0f;
+    camera->far = 1000000.0f;
     
     //meshTerrain = new MeshTerrain();
     //meshTerrain->init("testdata/tess/config.ini");
     //meshTerrain->printInfo();
     
     tessTerrain = new TessTerrain();
-    tessTerrain->init("testdata/tess/config.ini");
+    //tessTerrain->init("testdata/tess/config.ini");
+    tessTerrain->init("testdata/south_west/west_1sh/west_1sh.ini");
     tessTerrain->printInfo();
     tessTerrain->calViewportMatrix(WIDTH, HEIGHT);
     
+    tessTerrain2 = new TessTerrain();
+    tessTerrain2->init("testdata/south_west/east_1sh/east_1sh.ini");
+    tessTerrain2->printInfo();
+    tessTerrain2->calViewportMatrix(WIDTH, HEIGHT);
+    tessTerrain2->moveTo(glm::vec3(117850.4781, 0, 6077.757799));
+    
+    for(int i=0; i < num_stations; i++) {
+        Mesh* m = MeshUtils::sphere(500, 5, 5);
+        cout << stations_loc[2*i] << " " << 3*stations_height[i] << " " << -1*stations_loc[2*i+1] << endl;
+        m->moveTo(glm::vec3(stations_loc[2*i], 3*stations_height[i], -1*stations_loc[2*i+1]));
+        stations.push_back(m);
+    }
 }
 
 void free_resources()
 {
-    if(meshTerrain)
-        delete meshTerrain;
     if(tessTerrain)
         delete tessTerrain;
+    if(tessTerrain2)
+        delete tessTerrain2;
     if(camera)
         delete camera;
+    for(int i = 0; i < stations.size(); i++)
+        if(stations[i])
+            delete stations[i];
 }
 
 void doMovement() {
@@ -176,12 +233,11 @@ void doMovement() {
         keys[GLFW_KEY_I] = false;
     }
     if(keys[GLFW_KEY_T]) {
-        if(meshTerrain)
-            meshTerrain->toggleWireFrame();
         keys[GLFW_KEY_T] = false;
     }
     if(keys[GLFW_KEY_N]) {
         tessTerrain->nextDisplayMode();
+        tessTerrain2->nextDisplayMode();
         keys[GLFW_KEY_N] = false;
     }
 }
@@ -217,6 +273,11 @@ void mainLoop()
         
         //meshTerrain->render(camera);
         tessTerrain->render(camera);
+        tessTerrain2->render(camera);
+        
+        for(int i = 0; i < stations.size(); i++)
+            if(stations[i])
+                stations[i]->render(camera);
 
         glfwSwapBuffers(window);
 

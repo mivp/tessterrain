@@ -16,7 +16,7 @@ namespace tessterrain {
 class Texture
 {
 public:
-    Texture(const char* filename, unsigned int index = 0, bool mipmap = false, unsigned int _format=GL_RGBA, unsigned int _globalFormat=GL_RGBA);
+    Texture(const char* filename, unsigned int index = 0, bool mipmap = false);
     Texture(unsigned int _index, unsigned int _width, unsigned int _height, unsigned int _format=GL_RGBA, unsigned int _globalFormat=GL_RGBA);
     ~Texture();
 

@@ -12,6 +12,13 @@ protected:
     string m_shaderDir;
 
 public:
+    glm::vec3 color;
+    glm::vec3 Ka;            // Ambient reflectivity
+    glm::vec3 Kd;            // Diffuse reflectivity
+    glm::vec3 Ks;            // Specular reflectivity
+    float shininess;         // Specular shininess exponent
+
+public:
     Material();
     ~Material();
     

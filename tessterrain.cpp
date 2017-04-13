@@ -39,6 +39,18 @@ public:
         terrain->printInfo();
     }
 
+    void nextDisplayMode()
+    {  
+        if(terrain)
+            terrain->nextDisplayMode();
+    }
+
+    void moveTo(const float x, const float y, const float z)
+    {
+        if(terrain)
+            terrain->moveTo(x, y, z);
+    }
+
     tessterrain::TessTerrain* terrain;
     bool visible;
     bool updateviewport;
@@ -126,6 +138,8 @@ BOOST_PYTHON_MODULE(tessterrain)
     //
     PYAPI_REF_BASE_CLASS(TessTerrainRenderModule)
     PYAPI_METHOD(TessTerrainRenderModule, initTerrain)
+    PYAPI_METHOD(TessTerrainRenderModule, nextDisplayMode)
+    PYAPI_METHOD(TessTerrainRenderModule, moveTo)
     ;
 
     def("initialize", initialize, PYAPI_RETURN_REF);

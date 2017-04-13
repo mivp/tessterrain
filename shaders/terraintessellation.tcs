@@ -22,10 +22,10 @@ const float tessellationLevel = 64.0;
 uniform int maxTrianglesPerTexel = 10;
 
 // Distance between each tessellation point at max tess level
-uniform float horizontalScale = 10.0;
+uniform vec2 horizontalScale = vec2(10.0);
 
 // Vertical scale to multiply height samples by
-uniform float verticalScale = 0.4;
+uniform vec2 verticalScale = vec2(1.0);
 
 // Transformation matrix
 uniform mat4 mvp;
@@ -86,8 +86,9 @@ void main()
     for ( int i = 0; i < 4; i++ )
     {
         vec4 position;
-        position.xz = patchCornersXZ[i] * horizontalScale;
-        position.y = verticalScale * texture( heightMap, patchCornersXZ[i] ).r;
+        position.x = patchCornersXZ[i][0] * horizontalScale[0];
+        position.z = patchCornersXZ[i][1] * horizontalScale[1];
+        position.y = verticalScale[0] + verticalScale[1] * texture( heightMap, patchCornersXZ[i] ).r;
         position.w = 1.0;
 
         // Transform to clip-space

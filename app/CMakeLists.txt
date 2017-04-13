@@ -56,6 +56,7 @@ SET( srcs
 		../Material.cpp
 		../Terrain.cpp
 		../Texture.cpp
+		../Mesh.cpp
 		main.cpp 
 		)
 
@@ -69,6 +70,7 @@ SET( headers
 		../Terrain.h
 		../Texture.h
 		../stb_image.h
+		../Mesh.h
 		Camera.h
 		)
 

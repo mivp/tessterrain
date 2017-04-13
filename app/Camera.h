@@ -3,6 +3,8 @@
 
 // ref: https://learnopengl.com/#!Getting-started/Camera
 
+#include "GLInclude.h"
+
 // Std. Includes
 #include <vector>
 
