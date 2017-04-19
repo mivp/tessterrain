@@ -64,6 +64,16 @@ void TessTerrain::init(string configfile) {
     m_horizontalRes = glm::vec2(reader.GetReal("horizontalres", "wres", 0), reader.GetReal("horizontalres", "hres", 0));
     
     m_heightRange = glm::vec2(reader.GetReal("heightrange", "min", 0), reader.GetReal("heightrange", "max", 1));
+
+    float vscalemin, vscalemax;
+    vscalemin = reader.GetReal("verticalscale", "min", -1);
+    vscalemax = reader.GetReal("verticalscale", "max", -1);
+    if(vscalemin == -1 || vscalemax == -1)
+    	m_verticalScale = glm::vec2(m_heightRange[0], m_heightRange[1]-m_heightRange[0]);
+    else
+        m_verticalScale = glm::vec2(vscalemin, vscalemax - vscalemin);
+   
+    //m_verticalScale = 3.0f * m_verticalScale;
     
     //TODO: translate and update m_modelMatrix
 }
@@ -158,9 +168,7 @@ void TessTerrain::setup(){
     m_horizontalScale = glm::vec2(m_horizontalRes[0] * m_texHightmap->getWidth(), m_horizontalRes[1] * m_texHightmap->getHeight());
     if(m_horizontalScale[1] < 0)
         m_horizontalScale[1] *= -1;
-    m_verticalScale = glm::vec2(m_heightRange[0], m_heightRange[1]-m_heightRange[0]);
     
-    m_verticalScale = 3.0f * m_verticalScale;
     cout << "horizontal scale: " << m_horizontalScale[0] << " " << m_horizontalScale[1] << endl;
     cout << "vertical scale: " << m_verticalScale[0] << " " << m_verticalScale[1] << endl;
     
@@ -241,10 +249,10 @@ void TessTerrain::render(const float MV[16], const float P[16]) {
     shader->setUniform( "material.shininess", 10.0f );
     
     shader->setUniform( "colorStop1", 0.0f );
-    shader->setUniform( "colorStop2", float(m_verticalScale[0] + 0.2*m_verticalScale[1]) );
-    shader->setUniform( "colorStop3", float(m_verticalScale[0] + 0.4*m_verticalScale[1]) );
-    shader->setUniform( "colorStop4", float(m_verticalScale[0] + 0.6*m_verticalScale[1]) );
-    shader->setUniform( "colorStop5", float(m_verticalScale[0] + 0.8*m_verticalScale[1]) );
+    shader->setUniform( "colorStop2", float(m_verticalScale[0] + 0.25*m_verticalScale[1]) );
+    shader->setUniform( "colorStop3", float(m_verticalScale[0] + 0.5*m_verticalScale[1]) );
+    shader->setUniform( "colorStop4", float(m_verticalScale[0] + 0.75*m_verticalScale[1]) );
+    shader->setUniform( "colorStop5", float(m_verticalScale[0] + m_verticalScale[1]) );
     
     // draw
     glEnable(GL_DEPTH_TEST);
