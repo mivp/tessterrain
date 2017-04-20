@@ -29,7 +29,6 @@ class TessTerrain {
 private:
     //terrain
     vector<string> m_files;     // highmap texture
-    glm::vec2 m_lefttop;
     glm::vec2 m_size;
     glm::vec2 m_horizontalRes;
     glm::vec2 m_horizontalScale;// x scale, z scale

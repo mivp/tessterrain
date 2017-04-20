@@ -36,12 +36,6 @@ uniform float colorStop3 = 8.0;
 uniform float colorStop4 = 12.0;
 uniform float colorStop5 = 16.0;
 
-/*
-uniform vec4 color1 = vec4( 0.00, 0.00, 0.55, 1.00 );
-uniform vec4 color2 = vec4( 0.89, 0.68, 0.00, 1.00 );
-uniform vec4 color3 = vec4( 0.75, 0.00, 0.00, 1.00 );
-uniform vec4 color4 = vec4( 1.00, 1.00, 1.00, 1.00 );
-*/
 uniform vec4 color1 = vec4( 0.27, 0.00, 0.53, 1.00 );
 uniform vec4 color2 = vec4( 0.11, 0.51, 0.73, 1.00 );
 uniform vec4 color3 = vec4( 0.42, 0.76, 0.36, 1.00 );

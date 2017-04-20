@@ -41,15 +41,15 @@ TessMaterial::TessMaterial(): Material() {
 
     m_shader = new GLSLProgram();
     string filename;
-    filename = m_shaderDir; filename.append("terraintessellation.vert");
+    filename = m_shaderDir; filename.append("terrain.vert");
     m_shader->compileShader(filename.c_str());
-    filename = m_shaderDir; filename.append("terraintessellation.tcs");
+    filename = m_shaderDir; filename.append("terrain.tcs");
     m_shader->compileShader(filename.c_str());
-    filename = m_shaderDir; filename.append("terraintessellation.tes");
+    filename = m_shaderDir; filename.append("terrain.tes");
     m_shader->compileShader(filename.c_str());
-    filename = m_shaderDir; filename.append("terraintessellation.geom");
+    filename = m_shaderDir; filename.append("terrain.geom");
     m_shader->compileShader(filename.c_str());
-    filename = m_shaderDir; filename.append("terraintessellation.frag");
+    filename = m_shaderDir; filename.append("terrain.frag");
     m_shader->compileShader(filename.c_str());
     m_shader->link();
 }

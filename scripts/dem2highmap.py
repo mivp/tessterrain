@@ -46,6 +46,7 @@ tmp = np.zeros((data.shape), dtype=np.float32)
 np.copyto(tmp, data)
 tmp[tmp < 0] = data.max()
 height_min = tmp.min()
+height_max = tmp.max()
 tmp = None
 
 data[data < 0] = height_min
@@ -53,11 +54,12 @@ data[data < 0] = height_min
 # generate config file
 
 hightmap_cfg = output_dir + '/' + name + '.ini'
-hightmap_img = output_dir + '/' + name + '.png'
+hightmap_img8 = output_dir + '/' + name + '8.png'
+hightmap_img16 = output_dir + '/' + name + '16.ter'
 print 'save config to file ', hightmap_cfg
 with open(hightmap_cfg, 'wt') as f:
     f.write('[file]\n')
-    f.write('heightmap = ' + hightmap_img + '\n\n')
+    f.write('heightmap = ' + hightmap_img8 + '\n\n')
 
     f.write('[topleft]\n')
     f.write('left = 0\n')
@@ -81,91 +83,35 @@ if height % 64 != 0:
 data2 = np.ones((height, width), dtype=np.float32) * height_min
 data2[:data.shape[0],:data.shape[1]] = data
 
-data2 = 255 * (data2 - height_min) / (data.max() -height_min)
-data = data2.astype(np.uint8)
+data8 = np.zeros(data2.shape, np.float32)
+data16 = np.zeros(data2.shape, np.float32)
+np.copyto(data8, data2)
+np.copyto(data16, data2)
 
-print 'save data to file ', hightmap_img
-#png.from_array(data, 'L').save(hightmap_img)
-f = open(hightmap_img, 'wb')
-w = png.Writer(width=data.shape[1], height=data.shape[0], greyscale=True, bitdepth=8)
-#data2list = data.reshape(-1, data.shape[1]).tolist()
-w.write(f, data)
+data8 = 255 * (data8 - height_min) / (height_max - height_min)
+data8 = data8.astype(np.uint8)
 
-sys.exit(0)
+data16 = data16.astype(np.uint16)
 
+print 'save 8-bit data to image file ', hightmap_img8
+f8 = open(hightmap_img8, 'wb')
+w8 = png.Writer(width=data8.shape[1], height=data8.shape[0], greyscale=True, bitdepth=8)
+w8.write(f8, data8)
 
-output_filename = input_filename + '.txt'
-
-
-
-
-
-
-# print out metadata
-print src_ds.GetMetadata()
-
-# get number of raster bands
-print "[ RASTER BAND COUNT ]: ", src_ds.RasterCount
-
-# project ref
-print src_ds.GetProjectionRef()
-
-# driver
-dri = src_ds.GetDriver()
-print "[driver desc: ]: ", dri.GetDescription()
-
-
-
-
-
-stats = srcband.GetStatistics( True, True )
-print "[ STATS ] =  Minimum=%.3f, Maximum=%.3f, Mean=%.3f, StdDev=%.3f" % (stats[0], stats[1], stats[2], stats[3])
 """
-# print out band information
-print "[ NO DATA VALUE ] = ", srcband.GetNoDataValue()
-print "[ MIN ] = ", srcband.GetMinimum()
-print "[ MAX ] = ", srcband.GetMaximum()
-print "[ SCALE ] = ", srcband.GetScale()
-print "[ UNIT TYPE ] = ", srcband.GetUnitType()
-ctable = srcband.GetColorTable()
-
-if ctable is None:
-    print 'No ColorTable found'
-    sys.exit(1)
-
-print "[ COLOR TABLE COUNT ] = ", ctable.GetCount()
-for i in range( 0, ctable.GetCount() ):
-    entry = ctable.GetColorEntry( i )
-    if not entry:
-        continue
-    print "[ COLOR ENTRY RGB ] = ", ctable.GetColorEntryAsRGB( i, entry )
+print 'save 16-bit data to txt file ', hightmap_img16
+with open(hightmap_img16, 'wt') as f16:
+    f16.write(str(data16.shape[0]) + ' ' + str(data16.shape[1]) + '\n')
+    for r in range(data16.shape[0]):
+        for c in range(data16.shape[1]):
+            f16.write(str(data16[r][c]) + ' ')
+        f16.write('\n')
 """
 
-
-
-# read band data
-#scanline = srcband.ReadRaster( 0, 0, srcband.XSize, 1, srcband.XSize, 1, gdal.GDT_Float32 )
-
-# Another way to load source data as a gdalnumeric array
-try:
-    srcArray = gdalnumeric.LoadFile(input_filename)
-
-except RuntimeError, e:
-    print 'Unable to open INPUT.tif'
-    print e
-    sys.exit(1)
-
-# easy way
-data = srcband.ReadAsArray()
-low_values_indices = data <= 0
-data[low_values_indices] = 0
-data = scipy.ndimage.zoom(data, 0.5, order=1) #bilinear interpolation 0: nearest 2: cubic
-print 'Size: ', data.shape
-print 'Res: ', geoTrans[1]*2, ' ', geoTrans[5]*2
-
-np.savetxt(output_filename, data)
-
-# close dataset
-src_ds = None
+"""
+f16 = open(hightmap_img16, 'wb')
+w16 = png.Writer(width=data16.shape[1], height=data16.shape[0], greyscale=True, bitdepth=16)
+w16.write(f16, data16)
+"""
 
 print 'Done!'

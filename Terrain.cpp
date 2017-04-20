@@ -59,9 +59,7 @@ void TessTerrain::init(string configfile) {
     if(str.length() > 0)
         m_files.push_back(str);
     
-    m_lefttop = glm::vec2(reader.GetInteger("topleft", "left", 0), reader.GetInteger("topleft", "top", 0));
-    
-    m_horizontalRes = glm::vec2(reader.GetReal("horizontalres", "wres", 0), reader.GetReal("horizontalres", "hres", 0));
+    m_horizontalRes = glm::vec2(reader.GetReal("horizontalres", "wres", 1), reader.GetReal("horizontalres", "hres", 1));
     
     m_heightRange = glm::vec2(reader.GetReal("heightrange", "min", 0), reader.GetReal("heightrange", "max", 1));
 
@@ -72,17 +70,12 @@ void TessTerrain::init(string configfile) {
     	m_verticalScale = glm::vec2(m_heightRange[0], m_heightRange[1]-m_heightRange[0]);
     else
         m_verticalScale = glm::vec2(vscalemin, vscalemax - vscalemin);
-   
-    //m_verticalScale = 3.0f * m_verticalScale;
-    
-    //TODO: translate and update m_modelMatrix
 }
 
 void TessTerrain::printInfo() {
     
     for (int i=0; i < m_files.size(); i++)
         cout << "file: " << m_files[i] << endl;
-    cout << "left: " << m_lefttop[0] << " top: " << m_lefttop[1] << endl;
     cout << "wres: " << m_horizontalRes[0] << " hres: " << m_horizontalRes[1] << endl;
     cout << "h min: " << m_heightRange[0] << " h max: " << m_heightRange[1] << endl;
 }

@@ -26,10 +26,48 @@ float dt = 0;
 #define WIDTH 1024
 #define HEIGHT 768
 
+int num_stations = 15;
+float stations_loc[] =
+{   157785.4006,	-10693.83491,
+    177420.6376,	-5577.00931,
+    29384.04148,	-136586.0948,
+    200039.4272,	-187156.8063,
+    11389.11211,	-42189.86366,
+    5103.594053,	-79892.65485,
+    75758.59579,	-50433.21111,
+    137510.9092,	-97982.61689,
+    226461.8312,	-117937.4362,
+    124056.8904,	-12275.08654,
+    89669.70268,	-132725.7355,
+    23342.03458,	-123237.4277,
+    35559.88801,	-126637.733,
+    109057.8335,	-121908.1675,
+    153255.1656,	-58332.76674 };
+
+float stations_height[] =
+{   295,
+    875,
+    45.4,
+    82,
+    130.6,
+    51,
+    241.1,
+    130,
+    261,
+    1150,
+    10,
+    80.9,
+    0,
+    70.8,
+    226};
+
 TessTerrain* tessTerrain = NULL;
-vector<Mesh*> objects;
+TessTerrain* tessTerrain2 = NULL;
+vector<Mesh*> stations;
 
 Camera* camera = NULL;
+
+int currentkey = -1;
 
 //camera / mouse
 bool keys[1024];
@@ -97,38 +135,86 @@ static void window_size_callback(GLFWwindow* window, int width, int height) {
 	
 }
 
-void init_resources(string inifile)
+void init_resources()
 {
+    // test mesh terrain
+    /*
+    //string in_filename = "testdata/heightmap_small.txt";
+    //string in_filename = "testdata/data/drycreek.tif.txt";
+    string in_filename = "testdata/mel_small/mel_small.tif.txt";
+    //string in_filename = "testdata/sw_lr/sw_lr.tif.txt";
+    string obj_filename = in_filename;
+    obj_filename.append(".obj");
+    
+    meshMaterial = new MeshMaterial();
     camera = new Camera();
-    camera->position = glm::vec3(-102.684, 1940.91, 1665.38);
-    camera->front = glm::vec3(0.749869, -0.437191, 0.496548);
+    camera->position = glm::vec3(3654.82, -7820.01, 971.397);
+    camera->front = glm::vec3(0.00699247, 0.91324, -0.407362);
+    camera->pitch = 65.957;
+    camera->yaw = -89.0166;
     camera->ratio = 1.0*WIDTH/HEIGHT;
-    camera->movementSpeed = 1000;
-    camera->pitch = -25.9248;
-    camera->yaw = 33.5117;
-    camera->near = 10.0f;
+    camera->movementSpeed = 500;
+    
+    
+    meshTerrain = new MeshTerrain(meshMaterial);
+    cout << "=== Loading data ... ===" << endl;
+    meshTerrain->loadHeightMap(in_filename);
+    cout << "=== Creating mesh ... ===" << endl;
+    meshTerrain->createMesh();
+    //cout << "=== Save to obj ... ===" << endl;
+    //terrain->saveMeshToObj(obj_filename);
+    cout << "=== Ready to draw ...===" << endl;
+    */
+    
+    // test tessellation terrain
+    
+    camera = new Camera();
+    //camera->position = glm::vec3(294.059, 85.6822, 559.623);
+    //camera->front = glm::vec3(-0.0794522, -0.407484, -0.90975);
+    camera->position = glm::vec3(73823.5, 97650, 148957);
+    camera->front = glm::vec3(0.0522058, -0.772296, -0.633114);
+    camera->ratio = 1.0*WIDTH/HEIGHT;
+    camera->movementSpeed = 10000;
+    camera->pitch = -50.5605;
+    camera->yaw = -85.2861;
+    camera->near = 100.0f;
     camera->far = 1000000.0f;
     
+    //meshTerrain = new MeshTerrain();
+    //meshTerrain->init("testdata/tess/config.ini");
+    //meshTerrain->printInfo();
+    
     tessTerrain = new TessTerrain();
-    tessTerrain->init(inifile);
+    //tessTerrain->init("testdata/tess/config.ini");
+    tessTerrain->init("testdata/south_west/west_1sh/west_1sh.ini");
     tessTerrain->printInfo();
     tessTerrain->calViewportMatrix(WIDTH, HEIGHT);
     
-    // create a sample object at origin
-    Mesh* m = MeshUtils::sphere(100, 10, 10);
-    m->moveTo(glm::vec3(0, 100, 0));
-    objects.push_back(m);
+    tessTerrain2 = new TessTerrain();
+    tessTerrain2->init("testdata/south_west/east_1sh/east_1sh.ini");
+    tessTerrain2->printInfo();
+    tessTerrain2->calViewportMatrix(WIDTH, HEIGHT);
+    tessTerrain2->moveTo(glm::vec3(117850.4781, 0, 6077.757799));
+    
+    for(int i=0; i < num_stations; i++) {
+        Mesh* m = MeshUtils::sphere(500, 5, 5);
+        cout << stations_loc[2*i] << " " << 3*stations_height[i] << " " << -1*stations_loc[2*i+1] << endl;
+        m->moveTo(glm::vec3(stations_loc[2*i], 3*stations_height[i], -1*stations_loc[2*i+1]));
+        stations.push_back(m);
+    }
 }
 
 void free_resources()
 {
     if(tessTerrain)
         delete tessTerrain;
+    if(tessTerrain2)
+        delete tessTerrain2;
     if(camera)
         delete camera;
-    for(int i = 0; i < objects.size(); i++)
-        if(objects[i])
-            delete objects[i];
+    for(int i = 0; i < stations.size(); i++)
+        if(stations[i])
+            delete stations[i];
 }
 
 void doMovement() {
@@ -152,6 +238,7 @@ void doMovement() {
     }
     if(keys[GLFW_KEY_N]) {
         tessTerrain->nextDisplayMode();
+        tessTerrain2->nextDisplayMode();
         keys[GLFW_KEY_N] = false;
     }
 }
@@ -172,17 +259,26 @@ void mainLoop()
         doMovement();
         
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-       
         // Dark blue background
         //glClearColor(1.0f,0.5f,0.5f,1.0f);
-    
-        // render terrain
-        tessTerrain->render(camera);
         
-        // render objects
-        for(int i = 0; i < objects.size(); i++)
-            if(objects[i])
-                objects[i]->render(camera);
+        //renderer->update(dt);
+        //renderer->render();
+        //PrepFinalBuffer();
+        //ClearFinalBuffer();
+        //DrawFinalBuffer();
+        
+        //glEnable(GL_DEPTH_TEST);
+        //glEnable(GL_CULL_FACE);
+        //glCullFace(GL_FRONT);
+        
+        //meshTerrain->render(camera);
+        tessTerrain->render(camera);
+        tessTerrain2->render(camera);
+        
+        for(int i = 0; i < stations.size(); i++)
+            if(stations[i])
+                stations[i]->render(camera);
 
         glfwSwapBuffers(window);
 
@@ -209,10 +305,8 @@ void mainLoop()
 }
 
 int main(int argc, char* argv[]) {
-    
-    string inifile = "testdata/tess/config.ini";
-    if(argc == 2)
-        inifile = string(argv[1]);
+
+	//scene = new SceneViewer(WIDTH, HEIGHT);
 
 	// Initialise GLFW
 	if( !glfwInit() )
@@ -257,7 +351,7 @@ int main(int argc, char* argv[]) {
 	GLUtils::dumpGLInfo();
 
 	// init resources
-	init_resources(inifile);
+	init_resources();
 
 	// Enter the main loop
 	mainLoop();
