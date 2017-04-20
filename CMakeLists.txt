@@ -18,10 +18,7 @@ add_definitions(-DOMEGALIB_MODULE)
 
 # Set module name and source files here
 add_library(${MODULE_NAME} MODULE 
-		ini.h
-		ini.c
 		INIReader.h
-		INIReader.cpp
 		Program.h
 		Program.cpp
 		Material.h

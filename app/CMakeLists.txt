@@ -49,8 +49,6 @@ add_subdirectory (external)
 
 # Main app
 SET( srcs 
-		../ini.c
-		../INIReader.cpp
 		../Glutils.cpp
 		../Program.cpp
 		../Material.cpp
@@ -62,7 +60,6 @@ SET( srcs
 
 # Headers
 SET( headers
-		../ini.h
 		../INIReader.h
 		../Glutils.h
 		../Program.h
