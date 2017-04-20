@@ -1,6 +1,6 @@
 # Tessellation terrain
 
-Desktop/CAVE2 terrain rendering with tessellation shaders.
+Desktop/CAVE2 terrain rendering using tessellation shaders.
 
 References:
 - [DirectX 11 terrain tessellation](https://developer.nvidia.com/sites/default/files/akamai/gamedev/files/sdk/11/TerrainTessellation_WhitePaper.pdf)
