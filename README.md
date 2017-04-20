@@ -56,6 +56,11 @@ Run
 ./tessterrain [path/to/inifile.ini]
 ```
 
+Keys
+
+- N: go to next display mode
+- I: print out camera information
+
 ## Configuration file (INI)
 
 Example
