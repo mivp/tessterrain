@@ -65,50 +65,38 @@ static void mouse_button_callback(GLFWwindow* window, int button, int action, in
 
 
 static void mouse_scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
-    camera->processMouseScroll(yoffset);
+    //camera->processMouseScroll(yoffset);
 }
 
 static void mouse_position_callback(GLFWwindow* window, double xpos, double ypos) {
     
-    if(!usemouse) {
-        lastX = xpos;
-        lastY = ypos;
+    if(firstmouse) {
+        camera->move_camera = false;
+        camera->Move2D((int)xpos, (int)ypos);
+        firstmouse = false;
         return;
     }
     
-    if(firstmouse)
-    {
-        lastX = xpos;
-        lastY = ypos;
-        firstmouse = false;
-        cout << "first: " << lastX << " " << lastY << endl;
-    }
-    
-    GLfloat xoffset = xpos - lastX;
-    GLfloat yoffset = lastY - ypos;  // Reversed since y-coordinates go from bottom to left
-    
-    lastX = xpos;
-    lastY = ypos;
-    
-    camera->processMouseMovement(xoffset, yoffset);
+    camera->move_camera = usemouse;
+    camera->Move2D((int)xpos, (int)ypos);
 }
 
 static void window_size_callback(GLFWwindow* window, int width, int height) {
 	
 }
 
-void init_resources(string inifile)
-{
-    camera = new Camera();
-    camera->position = glm::vec3(-102.684, 1940.91, 1665.38);
-    camera->front = glm::vec3(0.749869, -0.437191, 0.496548);
-    camera->ratio = 1.0*WIDTH/HEIGHT;
-    camera->movementSpeed = 1000;
-    camera->pitch = -25.9248;
-    camera->yaw = 33.5117;
-    camera->near = 10.0f;
-    camera->far = 1000000.0f;
+void init_resources(string inifile) {
     
+    camera = new Camera();
+    camera->SetPosition(glm::vec3(-102.684, 1940.91, 1665.38));
+    camera->SetLookAt(glm::vec3(-101.934, 1940.47, 1665.88));
+    camera->SetViewport(0, 0, WIDTH, HEIGHT);
+    camera->SetClipping(1, 1000000);
+    //speed
+    camera->camera_scale = 8;
+    camera->Update();
+    
+    // terrain
     tessTerrain = new TessTerrain();
     tessTerrain->init(inifile);
     tessTerrain->printInfo();
@@ -134,19 +122,26 @@ void free_resources()
 void doMovement() {
     // Camera controls
     if(keys[GLFW_KEY_W])
-        camera->processKeyboard(FORWARD, dt);
+        camera->Move(FORWARD);
     if(keys[GLFW_KEY_S])
-        camera->processKeyboard(BACKWARD, dt);
+        camera->Move(BACK);
     if(keys[GLFW_KEY_A])
-        camera->processKeyboard(LEFT, dt);
+        camera->Move(LEFT);
     if(keys[GLFW_KEY_D])
-        camera->processKeyboard(RIGHT, dt);
+        camera->Move(RIGHT);
+    if(keys[GLFW_KEY_Q])
+        camera->Move(DOWN);
+    if(keys[GLFW_KEY_E])
+        camera->Move(UP);
+    
     if(keys[GLFW_KEY_I]) {
-        cout << "pos: " << camera->position[0] << " " << camera->position[1] << " " << camera->position[2] << endl;
-        cout << "front: " << camera->front[0] << " " << camera->front[1] << " " << camera->front[2] << endl;
-        cout << "pitch: " << camera->pitch << " yaw: " << camera->yaw << endl;
+        cout << "pos: " << camera->camera_position[0] << ", " << camera->camera_position[1] << ", " << camera->camera_position[2] << endl;
+        cout << "direction: " << camera->camera_direction[0] << ", " << camera->camera_direction[1] << ", " << camera->camera_direction[2] << endl;
+        cout << "lookat: " << camera->camera_look_at[0] << ", " << camera->camera_look_at[1] << ", " << camera->camera_look_at[2] << endl;
+        cout << "up: " << camera->camera_up[0] << ", " << camera->camera_up[1] << ", " << camera->camera_up[2] << endl;
         keys[GLFW_KEY_I] = false;
     }
+    
     if(keys[GLFW_KEY_T]) {
         keys[GLFW_KEY_T] = false;
     }
@@ -154,6 +149,7 @@ void doMovement() {
         tessTerrain->nextDisplayMode();
         keys[GLFW_KEY_N] = false;
     }
+    camera->Update();
 }
 
 void mainLoop()
@@ -177,7 +173,11 @@ void mainLoop()
         //glClearColor(1.0f,0.5f,0.5f,1.0f);
     
         // render terrain
-        tessTerrain->render(camera);
+        float* MV, *P;
+        MV = (float*)glm::value_ptr(camera->MV);
+        P = (float*)glm::value_ptr(camera->projection);
+        
+        tessTerrain->render(MV, P);
         
         // render objects
         for(int i = 0; i < objects.size(); i++)

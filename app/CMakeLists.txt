@@ -55,6 +55,7 @@ SET( srcs
 		../Terrain.cpp
 		../Texture.cpp
 		../Mesh.cpp
+		Camera.cpp
 		main.cpp 
 		)
 
@@ -78,3 +79,5 @@ add_executable(tessterrain ${srcs} ${headers})
 
 # create the program
 target_link_libraries(tessterrain ${ALL_LIBS} )
+
+source_group("app" FILES Camera.h Camera.cpp GLInlcude.h nuklear.h nuklear_glfw_gl2.h GLUtils.h GLUtils.cpp Mesh.h Mesh.cpp main.cpp)

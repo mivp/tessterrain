@@ -96,8 +96,8 @@ void Mesh::render(Camera* cam) {
     
     GLSLProgram* shader = m_material->getShader();
     shader->bind();
-    glm::mat4 viewMatrix = cam->getViewMatrix();
-    glm::mat4 projMatrix = cam->getProjectionMatrix();
+    glm::mat4 viewMatrix = cam->view;
+    glm::mat4 projMatrix = cam->projection;
     glm::mat4 modelViewMatrix = viewMatrix * m_modelMatrix;
     glm::mat3 normalMatrix = glm::inverseTranspose(glm::mat3(modelViewMatrix));
     glm::mat4 mvp = projMatrix * modelViewMatrix;

@@ -15,10 +15,6 @@ using std::string;
 #include "Material.h"
 #include "Texture.h"
 
-#ifndef OMEGALIB_MODULE
-#include "Camera.h"
-#endif
-
 namespace tessterrain {
 
 /**
@@ -81,11 +77,7 @@ public:
     void moveTo(float x, float y, float z) { moveTo(glm::vec3(x, y, z)); }
     
     void setup();
-#ifndef OMEGALIB_MODULE
-    void render(Camera* cam);
-#else
     void render(const float MV[16], const float P[16]);
-#endif
 };
 
 }; //namespace tessterrain

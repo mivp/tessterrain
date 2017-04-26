@@ -168,11 +168,7 @@ void TessTerrain::setup(){
     m_initialized = true;
 }
 
-#ifndef OMEGALIB_MODULE
-void TessTerrain::render(Camera* cam) {
-#else
 void TessTerrain::render(const float MV[16], const float P[16]) {
-#endif
     
     if(!m_initialized)
         setup();
@@ -207,15 +203,11 @@ void TessTerrain::render(const float MV[16], const float P[16]) {
     shader->setUniform( "viewportSize", m_viewportSize);
     
     // Pass in the usual transformation matrices
-#ifndef OMEGALIB_MODULE
-    glm::mat4 viewMatrix = cam->getViewMatrix();
-    glm::mat4 projMatrix = cam->getProjectionMatrix();
-#else
     glm::mat4 viewMatrix = glm::make_mat4(MV);
     //viewMatrix = glm::transpose(viewMatrix);
     glm::mat4 projMatrix = glm::make_mat4(P);
     //projMatrix = glm::transpose(projMatrix);
-#endif
+
     glm::mat4 modelViewMatrix = viewMatrix * m_modelMatrix;
     glm::mat3 worldNormalMatrix = glm::inverseTranspose(glm::mat3(m_modelMatrix));
     glm::mat3 normalMatrix = glm::inverseTranspose(glm::mat3(modelViewMatrix));
