@@ -7,9 +7,9 @@ References:
 - [Solid wireframe](http://developer.download.nvidia.com/SDK/10.5/direct3d/Source/SolidWireframe/Doc/SolidWireframe.pdf)
 - [QT5 and OpenGL terrain tessellation example](http://www.kdab.com/opengl-in-qt-5-1-part-5/)
 
-## Requisition
+## Prerequisites
 
-- OpenGL version 4
+- OpenGL version >= 4.0
 
 
 ## Omegalib module
