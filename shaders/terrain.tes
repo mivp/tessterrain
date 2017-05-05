@@ -46,6 +46,8 @@ void main()
     vec4 position;
     position.x = Out.texCoords[0] * horizontalScale[0];
     position.z = Out.texCoords[1] * horizontalScale[1];
+    Out.texCoords.x = clamp(Out.texCoords.x, 0.001, 0.999);
+    Out.texCoords.y = clamp(Out.texCoords.y, 0.001, 0.999);
     position.y = verticalScale[0] + verticalScale[1] * texture( heightMap, Out.texCoords ).r;
     position.w = 1.0;
 

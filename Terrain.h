@@ -30,6 +30,7 @@ private:
     glm::vec2 m_horizontalScale;// x scale, z scale
     glm::vec2 m_heightRange;    // (min, max)
     glm::vec2 m_verticalScale;  // (min height, max - min height)
+    glm::vec2 m_fogRange;
     bool m_initialized;
     
     //heightmap

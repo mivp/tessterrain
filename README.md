@@ -78,14 +78,22 @@ wres = 20
 hres = 20
 
 [heightrange]
-; (optional) min and max height of the heightmap. Defaults to [0, 1]
+; (optional) min and max height of the heightmap. Defaults to [0, 1, 1]
 min = 0
 max = 200
+scale = 1
 
 [verticalscale]
 ; (optional) display range. If [verticalscale] is not specified, [heightrange] will be used instead
 min = 0
 max = 220
+scale = 1	; defaults to [heightrange].scale
+
+[moveto]
+; (optional) move terain to position. Defautls to (0, 0, 0)
+x = 0
+y = 0
+z = 0
 ```
 
 ## Heightmap

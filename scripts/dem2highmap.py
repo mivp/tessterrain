@@ -10,10 +10,16 @@ if len(sys.argv) != 2:
     sys.exit('ERROR: invalid arguments. Usage: ' + sys.argv[0] + ' demfile')
 
 input_filename = sys.argv[1]
+print_config = False
 #input_filename = 'testdata/mel_small/mel_small.tif'
 #input_filename = 'testdata/data/drycreek.tif'
 #input_filename = 'testdata/sw_lr/sw_lr.tif'
 print input_filename
+
+if print_config:
+    print 'Print config file: YES'
+else:
+    print 'Print config file: NO'
 
 input_dir = os.path.dirname(input_filename)
 input_base = os.path.basename(input_filename)
@@ -54,24 +60,28 @@ data[data < 0] = height_min
 # generate config file
 
 hightmap_cfg = output_dir + '/' + name + '.ini'
-hightmap_img8 = output_dir + '/' + name + '8.png'
-hightmap_img16 = output_dir + '/' + name + '16.ter'
-print 'save config to file ', hightmap_cfg
-with open(hightmap_cfg, 'wt') as f:
-    f.write('[file]\n')
-    f.write('heightmap = ' + hightmap_img8 + '\n\n')
+hightmap_img8 = output_dir + '/' + name + '_8.png'
+hightmap_img16 = output_dir + '/' + name + '_16.ter'
+texture_img = output_dir + '/' + name + '_sat.png'
 
-    f.write('[topleft]\n')
-    f.write('left = 0\n')
-    f.write('top = 0\n\n')
+if print_config:
+    print 'save config to file ', hightmap_cfg
+    with open(hightmap_cfg, 'wt') as f:
+        f.write('[file]\n')
+        f.write('heightmap = ' + hightmap_img8 + '\n')
+        f.write('texture = ' + texture_img + '\n\n')
 
-    f.write('[horizontalres]\n')
-    f.write('wres = ' + str(gt[1]) + '\n')
-    f.write('hres = ' + str(gt[5]) + '\n\n')
+        f.write('[topleft]\n')
+        f.write('left = 0\n')
+        f.write('top = 0\n\n')
 
-    f.write('[heightrange]\n')
-    f.write('min = ' + str(data.min()) + '\n')
-    f.write('max = ' + str(data.max()) + '\n')
+        f.write('[horizontalres]\n')
+        f.write('wres = ' + str(gt[1]) + '\n')
+        f.write('hres = ' + str(gt[5]) + '\n\n')
+
+        f.write('[heightrange]\n')
+        f.write('min = ' + str(data.min()) + '\n')
+        f.write('max = ' + str(data.max()) + '\n')
 
 # save data to image
 width = data.shape[1]
@@ -80,8 +90,17 @@ if width % 64 != 0:
     width = (int(width / 64) + 1) * 64
 if height % 64 != 0:
     height = (int(height / 64) + 1) * 64
-data2 = np.ones((height, width), dtype=np.float32) * height_min
-data2[:data.shape[0],:data.shape[1]] = data
+zoom_w = float(width) / float(data.shape[1])
+zoom_h = float(height) / float(data.shape[0]) 
+
+# padding
+#data2 = np.ones((height, width), dtype=np.float32) * height_min
+#data2[:data.shape[0],:data.shape[1]] = data
+
+# resize
+print 'new width: ', width, 'height', height
+data2 = scipy.ndimage.zoom(data, zoom=(zoom_w, zoom_h), order=1)
+print data2.shape
 
 data8 = np.zeros(data2.shape, np.float32)
 data16 = np.zeros(data2.shape, np.float32)

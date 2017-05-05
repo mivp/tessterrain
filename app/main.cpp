@@ -26,7 +26,7 @@ float dt = 0;
 #define WIDTH 1024
 #define HEIGHT 768
 
-TessTerrain* tessTerrain = NULL;
+vector<TessTerrain*> tessTerrains;
 vector<Mesh*> objects;
 
 Camera* camera = NULL;
@@ -85,33 +85,39 @@ static void window_size_callback(GLFWwindow* window, int width, int height) {
 	
 }
 
-void init_resources(string inifile) {
+void init_resources(vector<string> inifiles) {
     
     camera = new Camera();
-    camera->SetPosition(glm::vec3(-102.684, 1940.91, 1665.38));
-    camera->SetLookAt(glm::vec3(-101.934, 1940.47, 1665.88));
+    //camera->SetPosition(glm::vec3(-102.684, 1940.91, 1665.38));
+    //camera->SetLookAt(glm::vec3(-101.934, 1940.47, 1665.88));
+    camera->SetPosition(glm::vec3(46930.8, 7805.12, 65433.8));
+    camera->SetLookAt(glm::vec3(46930.9, 7804.7, 65432.9));
     camera->SetViewport(0, 0, WIDTH, HEIGHT);
     camera->SetClipping(1, 1000000);
     //speed
-    camera->camera_scale = 8;
+    camera->camera_scale = 20;
     camera->Update();
     
-    // terrain
-    tessTerrain = new TessTerrain();
-    tessTerrain->init(inifile);
-    tessTerrain->printInfo();
-    tessTerrain->calViewportMatrix(WIDTH, HEIGHT);
+    // terrains
+    for (int i=0; i < inifiles.size(); i++) {
+        TessTerrain* tessTerrain = new TessTerrain();
+        tessTerrain->init(inifiles[i]);
+        tessTerrain->printInfo();
+        tessTerrain->calViewportMatrix(WIDTH, HEIGHT);
+        tessTerrains.push_back(tessTerrain);
+    }
     
     // create a sample object at origin
-    Mesh* m = MeshUtils::sphere(100, 10, 10);
+    Mesh* m = MeshUtils::sphere(200, 10, 10);
     m->moveTo(glm::vec3(0, 100, 0));
     objects.push_back(m);
 }
 
 void free_resources()
 {
-    if(tessTerrain)
-        delete tessTerrain;
+    for(int i=0; i < tessTerrains.size(); i++)
+        delete tessTerrains[i];
+    tessTerrains.clear();
     if(camera)
         delete camera;
     for(int i = 0; i < objects.size(); i++)
@@ -146,7 +152,8 @@ void doMovement() {
         keys[GLFW_KEY_T] = false;
     }
     if(keys[GLFW_KEY_N]) {
-        tessTerrain->nextDisplayMode();
+        for(int i=0; i < tessTerrains.size(); i++)
+            tessTerrains[i]->nextDisplayMode();
         keys[GLFW_KEY_N] = false;
     }
     camera->Update();
@@ -177,7 +184,8 @@ void mainLoop()
         MV = (float*)glm::value_ptr(camera->MV);
         P = (float*)glm::value_ptr(camera->projection);
         
-        tessTerrain->render(MV, P);
+        for(int i=0; i < tessTerrains.size(); i++)
+            tessTerrains[i]->render(MV, P);
         
         // render objects
         for(int i = 0; i < objects.size(); i++)
@@ -210,9 +218,22 @@ void mainLoop()
 
 int main(int argc, char* argv[]) {
     
-    string inifile = "testdata/tess/config.ini";
-    if(argc == 2)
-        inifile = string(argv[1]);
+    vector<string> inifiles;
+    
+    if(argc > 1) {
+        for(int i = 1; i < argc; i++)
+            inifiles.push_back(argv[i]);
+    }
+    else {
+        inifiles.push_back("testdata/south_west_usgs/s38_e141/s38_e141_1arc_v3.ini");
+        inifiles.push_back("testdata/south_west_usgs/s38_e142/s38_e142_1arc_v3.ini");
+        inifiles.push_back("testdata/south_west_usgs/s38_e143/s38_e143_1arc_v3.ini");
+        
+        inifiles.push_back("testdata/south_west_usgs/s39_e141/s39_e141_1arc_v3.ini");
+        inifiles.push_back("testdata/south_west_usgs/s39_e142/s39_e142_1arc_v3.ini");
+        inifiles.push_back("testdata/south_west_usgs/s39_e143/s39_e143_1arc_v3.ini");
+    }
+    
 
 	// Initialise GLFW
 	if( !glfwInit() )
@@ -257,7 +278,7 @@ int main(int argc, char* argv[]) {
 	GLUtils::dumpGLInfo();
 
 	// init resources
-	init_resources(inifile);
+	init_resources(inifiles);
 
 	// Enter the main loop
 	mainLoop();

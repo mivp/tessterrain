@@ -62,14 +62,25 @@ void TessTerrain::init(string configfile) {
     m_horizontalRes = glm::vec2(reader.GetReal("horizontalres", "wres", 1), reader.GetReal("horizontalres", "hres", 1));
     
     m_heightRange = glm::vec2(reader.GetReal("heightrange", "min", 0), reader.GetReal("heightrange", "max", 1));
+    float heightscale = reader.GetReal("heightrange", "scale", 1);
 
     float vscalemin, vscalemax;
-    vscalemin = reader.GetReal("verticalscale", "min", -1);
-    vscalemax = reader.GetReal("verticalscale", "max", -1);
+    vscalemin = reader.GetReal("globalheightrange", "min", -1);
+    vscalemax = reader.GetReal("globalheightrange", "max", -1);
     if(vscalemin == -1 || vscalemax == -1)
     	m_verticalScale = glm::vec2(m_heightRange[0], m_heightRange[1]-m_heightRange[0]);
     else
         m_verticalScale = glm::vec2(vscalemin, vscalemax - vscalemin);
+    float globalheighscale = reader.GetReal("globalheightrange", "scale", heightscale);
+    
+    m_heightRange = heightscale * m_heightRange;
+    m_verticalScale = globalheighscale * m_verticalScale;
+    
+    float x, y, z;
+    x = reader.GetReal("moveto", "x", 0);
+    y = reader.GetReal("moveto", "y", 0);
+    z = reader.GetReal("moveto", "z", 0);
+    moveTo(x, y, z);
 }
 
 void TessTerrain::printInfo() {
@@ -94,6 +105,9 @@ void TessTerrain::nextDisplayMode(bool forward) {
     }
     
     if(!m_texture && (m_displayMode == Textured || m_displayMode == TexturedAndLit) )
+        nextDisplayMode(forward);
+    
+    if (m_displayMode == WorldNormals || m_displayMode == LightingFactor)
         nextDisplayMode(forward);
         
     cout << "display mdoe: " << m_displayModeNames[m_displayMode] << endl;
@@ -162,8 +176,12 @@ void TessTerrain::setup(){
     if(m_horizontalScale[1] < 0)
         m_horizontalScale[1] *= -1;
     
+    m_fogRange = glm::vec2(50, m_horizontalScale[0] < m_horizontalScale[1] ? m_horizontalScale[0] : m_horizontalScale[1]);
+    m_fogRange[1] *= 2.0;
+    
     cout << "horizontal scale: " << m_horizontalScale[0] << " " << m_horizontalScale[1] << endl;
     cout << "vertical scale: " << m_verticalScale[0] << " " << m_verticalScale[1] << endl;
+    cout << "fog range: " <<m_fogRange[0] << " " << m_fogRange[1] << endl;
     
     m_initialized = true;
 }
@@ -192,12 +210,12 @@ void TessTerrain::render(const float MV[16], const float P[16]) {
     
     // Set the fog parameters
     shader->setUniform( "fog.color", glm::vec4( 0.65f, 0.77f, 1.0f, 1.0f ) );
-    shader->setUniform( "fog.minDistance", 50.0f );
-    shader->setUniform( "fog.maxDistance", 800.0f );
+    shader->setUniform( "fog.minDistance", m_fogRange[0] );
+    shader->setUniform( "fog.maxDistance", m_fogRange[1] );
     
     // scales
     shader->setUniform( "horizontalScale", m_horizontalScale );
-    shader->setUniform( "verticalScale", m_verticalScale );
+    shader->setUniform( "verticalScale", m_heightRange );
     shader->setUniform( "pixelsPerTriangleEdge", 12.0f );
     shader->setUniform( "maxTrianglesPerTexel", (int)1);
     shader->setUniform( "viewportSize", m_viewportSize);
@@ -228,10 +246,10 @@ void TessTerrain::render(const float MV[16], const float P[16]) {
     shader->setUniform( "light.intensity", glm::vec3( 1.0f, 1.0f, 1.0f ) );
     
     // Set the material properties
-    shader->setUniform( "material.Ka",  glm::vec3( 0.1f, 0.1f, 0.1f ) );
-    shader->setUniform( "material.Kd",  glm::vec3( 1.0f, 1.0f, 1.0f ) );
+    shader->setUniform( "material.Ka",  glm::vec3( 0.5f, 0.5f, 0.5f ) );
+    shader->setUniform( "material.Kd",  glm::vec3( 0.5f, 0.5f, 0.5f ) );
     shader->setUniform( "material.Ks",  glm::vec3( 0.3f, 0.3f, 0.3f ) );
-    shader->setUniform( "material.shininess", 10.0f );
+    shader->setUniform( "material.shininess", 1.0f );
     
     shader->setUniform( "colorStop1", 0.0f );
     shader->setUniform( "colorStop2", float(m_verticalScale[0] + 0.25*m_verticalScale[1]) );
