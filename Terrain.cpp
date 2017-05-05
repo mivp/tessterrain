@@ -110,7 +110,7 @@ void TessTerrain::nextDisplayMode(bool forward) {
     if (m_displayMode == WorldNormals || m_displayMode == LightingFactor)
         nextDisplayMode(forward);
         
-    cout << "display mdoe: " << m_displayModeNames[m_displayMode] << endl;
+    cout << "display mode: " << m_displayModeNames[m_displayMode] << endl;
 }
     
 void TessTerrain::moveTo(glm::vec3 pos) {
@@ -133,10 +133,10 @@ void TessTerrain::setup(){
     const int trianglesPerHeightSample = 1;
     const int xDivisions = trianglesPerHeightSample * m_texHightmap->getWidth() / maxTessellationLevel;
     const int zDivisions = trianglesPerHeightSample * m_texHightmap->getHeight() / maxTessellationLevel;
-    cout << "xDivisions = " << xDivisions << " zDivisions = " << zDivisions << endl;
+    //cout << "xDivisions = " << xDivisions << " zDivisions = " << zDivisions << endl;
     m_patchCount = xDivisions * zDivisions;
     vector<float> positionData( 2 * m_patchCount ); // 2 floats per vertex
-    cout << "Total number of patches = " << m_patchCount << endl;
+    //cout << "Total number of patches = " << m_patchCount << endl;
     
     const float dx = 1.0f / static_cast<float>( xDivisions );
     const float dz = 1.0f / static_cast<float>( zDivisions );
@@ -179,9 +179,9 @@ void TessTerrain::setup(){
     m_fogRange = glm::vec2(50, m_horizontalScale[0] < m_horizontalScale[1] ? m_horizontalScale[0] : m_horizontalScale[1]);
     m_fogRange[1] *= 2.0;
     
-    cout << "horizontal scale: " << m_horizontalScale[0] << " " << m_horizontalScale[1] << endl;
-    cout << "vertical scale: " << m_verticalScale[0] << " " << m_verticalScale[1] << endl;
-    cout << "fog range: " <<m_fogRange[0] << " " << m_fogRange[1] << endl;
+    //cout << "horizontal scale: " << m_horizontalScale[0] << " " << m_horizontalScale[1] << endl;
+    //cout << "vertical scale: " << m_verticalScale[0] << " " << m_verticalScale[1] << endl;
+    //cout << "fog range: " <<m_fogRange[0] << " " << m_fogRange[1] << endl;
     
     m_initialized = true;
 }

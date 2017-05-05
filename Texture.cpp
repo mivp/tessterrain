@@ -23,7 +23,7 @@ Texture::Texture(const char* filename, unsigned int ind, bool mipmap) {
         exit(0);
     }
     
-    cout << "img: " << filename << " width: " << x << " height: " << y << " comps: " << n << endl;
+    //cout << "img: " << filename << " width: " << x << " height: " << y << " comps: " << n << endl;
     
     width = x;
     height = y;
