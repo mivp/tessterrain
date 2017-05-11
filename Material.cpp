@@ -5,7 +5,7 @@ namespace tessterrain {
 
 Material::Material(): m_shader(0) {
     m_shaderDir = SHADER_DIR;
-    std::cout << "Shader dir: " << SHADER_DIR << std::endl;
+    //std::cout << "Shader dir: " << SHADER_DIR << std::endl;
 
     color = glm::vec3(1.0);
     Ka = glm::vec3( 0.1f, 0.1f, 0.1f );

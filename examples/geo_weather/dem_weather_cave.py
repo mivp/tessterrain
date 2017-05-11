@@ -8,7 +8,7 @@ from omega import *
 from cyclops import *
 import tessterrain
 
-DATASHOW = 0 # 0: southwest, 1: entire VIC
+DATASHOW = 1 # 0: southwest, 1: entire VIC
 
 csv_filename = "testdata/south_west_usgs/south_west_stations.csv"
 # 1.0002777999999921 degree ~ 36470 m ~ 3648 pixels
@@ -18,8 +18,9 @@ ref_point['lat'] = -36.9998611
 ref_point['lon'] = 140.9998611
 data_height_scale = 0.4          # because x, z values were scaled smaller when preparing data
                                 # this value is multiple with height scale
-hscale_min = 0.1
-hscale_max = 3
+hscale_min = 0.2
+hscale_max = 4
+hscale_value = data_height_scale
 
 if DATASHOW == 0:
     terrains = (
@@ -75,12 +76,11 @@ light1.setAmbient(Color(0.2, 0.2, 0.2, 1.0))
 light1.setEnabled(True)
 
 
-def updateHeightScale(value):
-    global hscale_min
-    global hscale_max
-    val = ((float(value) / 100) * (hscale_max - hscale_min) + hscale_min) / 100
-    lscale.setText('Height scale: ' + str(val))
-    tt.updateHeightScale(val * data_height_scale)
+def setHeightScale(value):
+    val = (float(value) / 100) * (hscale_max - hscale_min) + hscale_min
+    hscale_label.setText('Height scale: ' + str(val))
+    hscale_value = val * data_height_scale
+    tt.setHeightScale(hscale_value)
 
 
 def calWindDir(str):
@@ -107,7 +107,7 @@ def drawStation(station, options):
     print station["Short"], station["Name"], station["Lat"], station["Lon"], station["Height"]
     lat = float(station["Lat"])
     lon = float(station["Lon"])
-    height = 1.2 * float(station["Height"])
+    height = hscale_value * float(station["Height"]) + 200
     label = station["Short"]
     name = station["Name"]
   
@@ -198,10 +198,10 @@ hscale_label = menu.addLabel("Height scale: ")
 
 hscale = 1
 val = int( float(hscale - hscale_min) / (hscale_max-hscale_min) * 100 )
-pointscale = menu.addSlider(100, "updatePointScale(%value%)")
+pointscale = menu.addSlider(100, "setHeightScale(%value%)")
 pointscale.getSlider().setValue(val)
 pointscale.getWidget().setWidth(200)
-updatePointScale(val)
+setHeightScale(val)
 
 
 # ray line
