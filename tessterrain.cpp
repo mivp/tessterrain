@@ -58,6 +58,12 @@ public:
         terrains[index]->moveTo(x, y, z);
     }
 
+    void setHeightScale(const float scale)
+    {
+        for(int i=0; i < terrains.size(); i++)
+            terrains[i]->setHeightScale(scale);
+    }
+
     vector<tessterrain::TessTerrain*> terrains;
     bool visible;
     bool updateviewport;
@@ -140,6 +146,7 @@ BOOST_PYTHON_MODULE(tessterrain)
     PYAPI_METHOD(TessTerrainRenderModule, printInfo)
     PYAPI_METHOD(TessTerrainRenderModule, nextDisplayMode)
     PYAPI_METHOD(TessTerrainRenderModule, moveTo)
+    PYAPI_METHOD(TessTerrainRenderModule, setHeightScale)
     ;
 
     def("initialize", initialize, PYAPI_RETURN_REF);

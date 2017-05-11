@@ -6,7 +6,7 @@ from cyclops import *
 from omegaToolkit import *
 
 tt = tessterrain.initialize()
-tt.initTerrain("testdata/tess/config.ini")
+tt.addTerrain("testdata/tess/config.ini")
 
 # model
 scene = getSceneManager()

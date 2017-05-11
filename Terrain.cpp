@@ -61,20 +61,19 @@ void TessTerrain::init(string configfile) {
     
     m_horizontalRes = glm::vec2(reader.GetReal("horizontalres", "wres", 1), reader.GetReal("horizontalres", "hres", 1));
     
-    m_heightRange = glm::vec2(reader.GetReal("heightrange", "min", 0), reader.GetReal("heightrange", "max", 1));
-    float heightscale = reader.GetReal("heightrange", "scale", 1);
+    m_heightRangeOri = glm::vec2(reader.GetReal("heightrange", "min", 0), reader.GetReal("heightrange", "max", 1));
+    m_heightRangeScale = reader.GetReal("heightrange", "scale", 1);
 
     float vscalemin, vscalemax;
     vscalemin = reader.GetReal("globalheightrange", "min", -1);
     vscalemax = reader.GetReal("globalheightrange", "max", -1);
     if(vscalemin == -1 || vscalemax == -1)
-    	m_verticalScale = glm::vec2(m_heightRange[0], m_heightRange[1]-m_heightRange[0]);
+    	m_verticalScaleOri = glm::vec2(m_heightRange[0], m_heightRange[1]-m_heightRange[0]);
     else
-        m_verticalScale = glm::vec2(vscalemin, vscalemax - vscalemin);
-    float globalheighscale = reader.GetReal("globalheightrange", "scale", heightscale);
-    
-    m_heightRange = heightscale * m_heightRange;
-    m_verticalScale = globalheighscale * m_verticalScale;
+        m_verticalScaleOri = glm::vec2(vscalemin, vscalemax - vscalemin);
+   
+    m_heightRange = m_heightRangeScale * m_heightRangeOri;
+    m_verticalScale = m_heightRangeScale * m_verticalScaleOri;
     
     float x, y, z;
     x = reader.GetReal("moveto", "x", 0);
@@ -116,6 +115,11 @@ void TessTerrain::nextDisplayMode(bool forward) {
 void TessTerrain::moveTo(glm::vec3 pos) {
     m_modelMatrix = glm::mat4(1.0);
     m_modelMatrix = glm::translate(m_modelMatrix, pos);
+}
+    
+void TessTerrain::setHeightScale(float scale) {
+    m_heightRange = scale * m_heightRangeOri;
+    m_verticalScale = scale * m_verticalScaleOri;
 }
 
 void TessTerrain::setup(){

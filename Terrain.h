@@ -24,14 +24,20 @@ class TessTerrain {
     
 private:
     //terrain
+    //original data read from ini file
     vector<string> m_files;     // highmap texture
     glm::vec2 m_size;
     glm::vec2 m_horizontalRes;
     glm::vec2 m_horizontalScale;// x scale, z scale
-    glm::vec2 m_heightRange;    // (min, max)
-    glm::vec2 m_verticalScale;  // (min height, max - min height)
+    glm::vec2 m_heightRangeOri;    // (min, max)
+    glm::vec2 m_verticalScaleOri;  // (min height, max - min height)
     glm::vec2 m_fogRange;
+    float m_heightRangeScale;
     bool m_initialized;
+    
+    //to pass to shaders
+    glm::vec2 m_heightRange;
+    glm::vec2 m_verticalScale;
     
     //heightmap
     Texture* m_texHightmap;
@@ -76,6 +82,7 @@ public:
     void nextDisplayMode(bool forward=true);
     void moveTo(glm::vec3 pos);
     void moveTo(float x, float y, float z) { moveTo(glm::vec3(x, y, z)); }
+    void setHeightScale(float scale);
     
     void setup();
     void render(const float MV[16], const float P[16]);

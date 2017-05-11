@@ -89,7 +89,6 @@ scale = 1
 ; (optional) display range. If [verticalscale] is not specified, [heightrange] will be used instead
 min = 0
 max = 220
-scale = 1	; defaults to [heightrange].scale
 
 [moveto]
 ; (optional) move terain to position. Defautls to (0, 0, 0)

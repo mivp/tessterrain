@@ -104,6 +104,7 @@ void init_resources(vector<string> inifiles) {
         tessTerrain->init(inifiles[i]);
         tessTerrain->printInfo();
         tessTerrain->calViewportMatrix(WIDTH, HEIGHT);
+        tessTerrain->setHeightScale(0.4);
         tessTerrains.push_back(tessTerrain);
     }
     
@@ -226,44 +227,44 @@ int main(int argc, char* argv[]) {
     }
     else {
         vector<string> files;
-        
+        /*
         files.push_back("s35_e141");
         files.push_back("s35_e142");
         
         files.push_back("s36_e141");
-        files.push_back("s36_e142");
+        iles.push_back("s36_e142");
         files.push_back("s36_e143");
         files.push_back("s36_e144");
         files.push_back("s36_e145");
         files.push_back("s36_e146");
         files.push_back("s36_e147");
-        
+        */
         files.push_back("s37_e141");
         files.push_back("s37_e142");
         files.push_back("s37_e143");
         files.push_back("s37_e144");
-        files.push_back("s37_e145");
-        files.push_back("s37_e146");
-        files.push_back("s37_e147");
-        files.push_back("s37_e148");
+        //files.push_back("s37_e145");
+        //files.push_back("s37_e146");
+        //files.push_back("s37_e147");
+        //files.push_back("s37_e148");
         
         files.push_back("s38_e141");
         files.push_back("s38_e142");
         files.push_back("s38_e143");
         files.push_back("s38_e144");
-        files.push_back("s38_e145");
-        files.push_back("s38_e146");
-        files.push_back("s38_e147");
-        files.push_back("s38_e148");
-        files.push_back("s38_e149");
+        //files.push_back("s38_e145");
+        //files.push_back("s38_e146");
+        //files.push_back("s38_e147");
+        //files.push_back("s38_e148");
+        //files.push_back("s38_e149");
         
         files.push_back("s39_e141");
         files.push_back("s39_e142");
         files.push_back("s39_e143");
         files.push_back("s39_e144");
-        files.push_back("s39_e145");
-        files.push_back("s39_e146");
-        files.push_back("s39_e147");
+        //files.push_back("s39_e145");
+        //files.push_back("s39_e146");
+        //files.push_back("s39_e147");
         
         for(int i=0; i < files.size(); i++) {
             string name = "";
