@@ -95,7 +95,7 @@ void init_resources(vector<string> inifiles) {
     camera->SetViewport(0, 0, WIDTH, HEIGHT);
     camera->SetClipping(1, 1000000);
     //speed
-    camera->camera_scale = 20;
+    camera->camera_scale = 30;
     camera->Update();
     
     // terrains
@@ -225,13 +225,56 @@ int main(int argc, char* argv[]) {
             inifiles.push_back(argv[i]);
     }
     else {
-        inifiles.push_back("testdata/south_west_usgs/s38_e141/s38_e141_1arc_v3.ini");
-        inifiles.push_back("testdata/south_west_usgs/s38_e142/s38_e142_1arc_v3.ini");
-        inifiles.push_back("testdata/south_west_usgs/s38_e143/s38_e143_1arc_v3.ini");
+        vector<string> files;
         
-        inifiles.push_back("testdata/south_west_usgs/s39_e141/s39_e141_1arc_v3.ini");
-        inifiles.push_back("testdata/south_west_usgs/s39_e142/s39_e142_1arc_v3.ini");
-        inifiles.push_back("testdata/south_west_usgs/s39_e143/s39_e143_1arc_v3.ini");
+        files.push_back("s35_e141");
+        files.push_back("s35_e142");
+        
+        files.push_back("s36_e141");
+        files.push_back("s36_e142");
+        files.push_back("s36_e143");
+        files.push_back("s36_e144");
+        files.push_back("s36_e145");
+        files.push_back("s36_e146");
+        files.push_back("s36_e147");
+        
+        files.push_back("s37_e141");
+        files.push_back("s37_e142");
+        files.push_back("s37_e143");
+        files.push_back("s37_e144");
+        files.push_back("s37_e145");
+        files.push_back("s37_e146");
+        files.push_back("s37_e147");
+        files.push_back("s37_e148");
+        
+        files.push_back("s38_e141");
+        files.push_back("s38_e142");
+        files.push_back("s38_e143");
+        files.push_back("s38_e144");
+        files.push_back("s38_e145");
+        files.push_back("s38_e146");
+        files.push_back("s38_e147");
+        files.push_back("s38_e148");
+        files.push_back("s38_e149");
+        
+        files.push_back("s39_e141");
+        files.push_back("s39_e142");
+        files.push_back("s39_e143");
+        files.push_back("s39_e144");
+        files.push_back("s39_e145");
+        files.push_back("s39_e146");
+        files.push_back("s39_e147");
+        
+        for(int i=0; i < files.size(); i++) {
+            string name = "";
+            name.append("testdata/vic_usgs/");
+            name.append(files[i]);
+            name.append("/");
+            name.append(files[i]);
+            name.append("_1arc_v3.ini");
+            inifiles.push_back(name);
+        }
+
     }
     
 

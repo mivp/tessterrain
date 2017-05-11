@@ -30,13 +30,15 @@ Run with python script:
 import tessterrain
 
 tt = tessterrain.initialize()
-tt.initTerrain("path/to/inifile.ini")
+tt.addTerrain("path/to/inifile1.ini")
+tt.addTerrain("path/to/inifile2.ini")
 ```
 
 Functions which can be used in python script:
 ```
-moveTo(x, y, z): move terrain to a position
+moveTo(index, x, y, z): move a specific terrain (specified by terrain index) to a position
 nextDisplayMode(): change display mode
+displayInfo(): display information of terrains
 ```
 
 ## Standalone app

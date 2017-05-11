@@ -1,6 +1,7 @@
 #include <omega.h>
 #include <omegaGl.h>
 #include <iostream>
+#include <vector>
 
 #include "Terrain.h"
 
@@ -12,9 +13,9 @@ class TessTerrainRenderModule : public EngineModule
 {
 public:
     TessTerrainRenderModule() :
-        EngineModule("TessTerrainRenderModule"), terrain(0), visible(true), updateviewport(false)
+        EngineModule("TessTerrainRenderModule"), visible(true), updateviewport(false)
     {
-    	
+    	terrains.clear();
     }
 
     virtual void initializeRenderer(Renderer* r);
@@ -22,36 +23,42 @@ public:
     virtual void update(const UpdateContext& context)
     {
         // After a frame all render passes had a chance to update their
-        // textures. reset the raster update flag.
-       
+        // textures. reset the raster update flag.       
     }
     
     virtual void dispose()
     {
-        if(terrain)
-            delete terrain;
+        for(int i=0; i < terrains.size(); i++)
+            delete terrains[i];
     }
 
-    void initTerrain(const string& option_file)
+    void addTerrain(const string& option_file)
     {
-        terrain = new tessterrain::TessTerrain();
+        tessterrain::TessTerrain* terrain = new tessterrain::TessTerrain();
         terrain->init(option_file);
-        terrain->printInfo();
+        terrains.push_back(terrain);
+    }
+
+    void printInfo()
+    {
+        for(int i=0; i < terrains.size(); i++)
+            terrains[i]->printInfo();
     }
 
     void nextDisplayMode()
     {  
-        if(terrain)
-            terrain->nextDisplayMode();
+        for(int i=0; i < terrains.size(); i++)
+            terrains[i]->nextDisplayMode();
     }
 
-    void moveTo(const float x, const float y, const float z)
+    void moveTo(const int index, const float x, const float y, const float z)
     {
-        if(terrain)
-            terrain->moveTo(x, y, z);
+        if(index < 0 || index >= terrains.size())
+            return;
+        terrains[index]->moveTo(x, y, z);
     }
 
-    tessterrain::TessTerrain* terrain;
+    vector<tessterrain::TessTerrain*> terrains;
     bool visible;
     bool updateviewport;
 };
@@ -78,30 +85,22 @@ public:
 	
     	    if(module->visible)
     	    { 
-                if(!module->updateviewport && module->terrain) {
-                    module->terrain->calViewportMatrix(context.viewport.width(), context.viewport.height());
-		    module->updateviewport = true;
+                if(!module->updateviewport && module->terrains.size() > 0) {
+
+                    for(int i=0; i < module->terrains.size(); i++) {
+                        module->terrains[i]->calViewportMatrix(context.viewport.width(), context.viewport.height());
+                    }
+                    
+                    module->updateviewport = true;
                 }
 	        
-		float* MV = context.modelview.cast<float>().data();
-        	float* P = context.projection.cast<float>().data();
-                module->terrain->render(MV, P);
+                float* MV = context.modelview.cast<float>().data();
+                float* P = context.projection.cast<float>().data();
+                for(int i=0; i < module->terrains.size(); i++) {
+                    module->terrains[i]->render(MV, P);
+                }
                 if(oglError) return;
 		
-                /*
-    			// Test and draw
-    			// get camera location in world coordinate
-            	//if(context.eye == DrawContext::EyeLeft || context.eye == DrawContext::EyeCyclop)
-            	{
-                	Vector3f cp = context.camera->getPosition();
-                	float campos[3] = {cp[0], cp[1], cp[2]};
-                	float* MVP = (context.projection*context.modelview).cast<float>().data();
-                    module->pointcloud->updateVisibility(MVP, campos, context.viewport.width(), context.viewport.height());
-            	}
-
-    		    module->pointcloud->draw();
-    		    if(oglError) return;
-                */
     	    }
             
             client->getRenderer()->endDraw();
@@ -137,7 +136,8 @@ BOOST_PYTHON_MODULE(tessterrain)
 {
     //
     PYAPI_REF_BASE_CLASS(TessTerrainRenderModule)
-    PYAPI_METHOD(TessTerrainRenderModule, initTerrain)
+    PYAPI_METHOD(TessTerrainRenderModule, addTerrain)
+    PYAPI_METHOD(TessTerrainRenderModule, printInfo)
     PYAPI_METHOD(TessTerrainRenderModule, nextDisplayMode)
     PYAPI_METHOD(TessTerrainRenderModule, moveTo)
     ;

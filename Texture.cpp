@@ -45,6 +45,7 @@ Texture::Texture(const char* filename, unsigned int ind, bool mipmap) {
     glGenTextures(1, &gluid);
     glBindTexture(GL_TEXTURE_2D, gluid);
     glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, globalFormat, GL_UNSIGNED_BYTE, data); //GL_UNSIGNED_INT_8_8_8_8_REV
+    GL_Error_Check;
     if(mipmap)
         glGenerateMipmap(GL_TEXTURE_2D);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER); //GL_CLAMP_TO_BORDER GL_REPEAT
