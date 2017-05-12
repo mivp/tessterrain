@@ -210,7 +210,7 @@ void main()
         // Blend with fog color
         float dist = abs( position.z );
         float fogFactor = ( fog.maxDistance - dist ) / ( fog.maxDistance - fog.minDistance );
-        fogFactor = clamp( fogFactor, 0.2, 1.0 );
+        fogFactor = clamp( fogFactor, 0.3, 1.0 );
         fragColor = mix( fog.color, c, fogFactor );
     }
     else 
