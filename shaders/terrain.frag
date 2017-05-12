@@ -9,6 +9,7 @@ uniform struct LineInfo {
 } line;
 
 uniform struct FogInfo {
+    bool enabled;
     vec4 color;
     float minDistance;
     float maxDistance;
@@ -204,11 +205,16 @@ void main()
     // Compute fragment color depending upon selected shading mode
     vec4 c = shaderModel();
 
-    // Blend with fog color
-    float dist = abs( position.z );
-    float fogFactor = ( fog.maxDistance - dist ) / ( fog.maxDistance - fog.minDistance );
-    fogFactor = clamp( fogFactor, 0.2, 1.0 );
-    fragColor = mix( fog.color, c, fogFactor );
-    
-    //fragColor = c;
+    if(fog.enabled) 
+    {
+        // Blend with fog color
+        float dist = abs( position.z );
+        float fogFactor = ( fog.maxDistance - dist ) / ( fog.maxDistance - fog.minDistance );
+        fogFactor = clamp( fogFactor, 0.2, 1.0 );
+        fragColor = mix( fog.color, c, fogFactor );
+    }
+    else 
+    {
+        fragColor = c;
+    }
 }

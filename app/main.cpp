@@ -150,6 +150,8 @@ void doMovement() {
     }
     
     if(keys[GLFW_KEY_T]) {
+        for(int i=0; i < tessTerrains.size(); i++)
+            tessTerrains[i]->toggleFog();
         keys[GLFW_KEY_T] = false;
     }
     if(keys[GLFW_KEY_N]) {

@@ -191,11 +191,12 @@ mm.setMainMenu(menu)
 
 # cameras
 menu.addButton("Go to camera 1", 'cam.setPosition(Vector3(46930.8, 7805.12, 65433.8)), cam.setOrientation(Quaternion(-0.99, 0.07, 0.07, 0.01))')
-menu.addButton("Go to default camera", 'cam.setPosition(Vector3(98493.20, 186738.52, 187947.87)), cam.setOrientation(Quaternion(-0.86, 0.50, 0.00, 0.00))')
+
+# fog
+menu.addButton("Toggle fog", 'tt.toggleFog()')
 
 # height scale
 hscale_label = menu.addLabel("Height scale: ")
-
 hscale = 1
 val = int( float(hscale - hscale_min) / (hscale_max-hscale_min) * 100 )
 pointscale = menu.addSlider(100, "setHeightScale(%value%)")

@@ -39,6 +39,7 @@ Functions which can be used in python script:
 moveTo(index, x, y, z): move a specific terrain (specified by terrain index) to a position
 nextDisplayMode(): change display mode
 displayInfo(): display information of terrains
+toggleFog(): toggle fog in scene
 ```
 
 ## Standalone app

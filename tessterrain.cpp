@@ -64,6 +64,12 @@ public:
             terrains[i]->setHeightScale(scale);
     }
 
+    void toggleFog()
+    {
+        for(int i=0; i < terrains.size(); i++)
+            terrains[i]->toggleFog();
+    }
+
     vector<tessterrain::TessTerrain*> terrains;
     bool visible;
     bool updateviewport;
@@ -147,6 +153,7 @@ BOOST_PYTHON_MODULE(tessterrain)
     PYAPI_METHOD(TessTerrainRenderModule, nextDisplayMode)
     PYAPI_METHOD(TessTerrainRenderModule, moveTo)
     PYAPI_METHOD(TessTerrainRenderModule, setHeightScale)
+    PYAPI_METHOD(TessTerrainRenderModule, toggleFog)
     ;
 
     def("initialize", initialize, PYAPI_RETURN_REF);

@@ -83,6 +83,7 @@ public:
     void moveTo(glm::vec3 pos);
     void moveTo(float x, float y, float z) { moveTo(glm::vec3(x, y, z)); }
     void setHeightScale(float scale);
+    void toggleFog();
     
     void setup();
     void render(const float MV[16], const float P[16]);

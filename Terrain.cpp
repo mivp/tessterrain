@@ -121,6 +121,11 @@ void TessTerrain::setHeightScale(float scale) {
     m_heightRange = scale * m_heightRangeOri;
     m_verticalScale = scale * m_verticalScaleOri;
 }
+    
+void TessTerrain::toggleFog() {
+    if(m_material)
+        m_material->fogEnabled = !m_material->fogEnabled;
+}
 
 void TessTerrain::setup(){
     
@@ -213,6 +218,7 @@ void TessTerrain::render(const float MV[16], const float P[16]) {
     shader->setUniform( "line.color", glm::vec4( 0.0f, 1.0f, 0.0f, 1.0f ) );
     
     // Set the fog parameters
+    shader->setUniform( "fog.enabled", m_material->fogEnabled );
     shader->setUniform( "fog.color", glm::vec4( 0.65f, 0.77f, 1.0f, 1.0f ) );
     shader->setUniform( "fog.minDistance", m_fogRange[0] );
     shader->setUniform( "fog.maxDistance", m_fogRange[1] );

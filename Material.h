@@ -17,6 +17,7 @@ public:
     glm::vec3 Kd;            // Diffuse reflectivity
     glm::vec3 Ks;            // Specular reflectivity
     float shininess;         // Specular shininess exponent
+    bool fogEnabled;         // Fog enabled?
 
 public:
     Material();
