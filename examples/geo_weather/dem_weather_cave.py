@@ -55,7 +55,7 @@ tt.setHeightScale(1.0 * data_height_scale);
 
 #vector field
 vf = vectorfield.initialize()
-vf.init(0, 0, 109379.614343, 72919.7428954, 4000, 2000);
+vf.init(0, 0, 109379.614343, 72919.7428954, 4000, 3500);
 
 vf.addControlPoint( 72195.6097426 , 10213.8282815 , 4.9193495505 , 9.838699101 );
 vf.addControlPoint( 80216.7814611 , 8390.83470912 , 6.36396103068 , 6.36396103068 );
@@ -76,7 +76,6 @@ vf.addControlPoint( 70737.2148847 , 25891.573004 , 8.4970583145 , 16.994116629 )
 vf.setPointScale(1.5)
 vf.updateVectorField()
 vf.setVisible(False)
-
 
 # model
 scene = getSceneManager()
@@ -222,7 +221,7 @@ menu.addButton("Go to camera 1", 'cam.setPosition(Vector3(46930.8, 7805.12, 6543
 menu.addButton("Toggle fog", 'tt.toggleFog()')
 
 # wind
-menu.addButton("Toggle wind", "vf.toogleVisible()")
+menu.addButton("Toggle wind", "vf.toggleVisible()")
 menu.addButton("Next particle type", "vf.nextParticleType()")
 
 # height scale
