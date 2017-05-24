@@ -2,7 +2,9 @@
 
 Desktop/CAVE2 terrain rendering using tessellation shaders.
 
-References:
+**Contact**: Toan Nguyen ([http://monash.edu/mivp](http://monash.edu/mivp))
+
+## References:
 - [DirectX 11 terrain tessellation](https://developer.nvidia.com/sites/default/files/akamai/gamedev/files/sdk/11/TerrainTessellation_WhitePaper.pdf)
 - [Solid wireframe](http://developer.download.nvidia.com/SDK/10.5/direct3d/Source/SolidWireframe/Doc/SolidWireframe.pdf)
 - [QT5 and OpenGL terrain tessellation example](http://www.kdab.com/opengl-in-qt-5-1-part-5/)
