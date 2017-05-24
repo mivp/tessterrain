@@ -223,6 +223,7 @@ menu.addButton("Toggle fog", 'tt.toggleFog()')
 
 # wind
 menu.addButton("Toggle wind", "vf.toogleVisible()")
+menu.addButton("Next particle type", "vf.nextParticleType()")
 
 # height scale
 hscale_label = menu.addLabel("Height scale: ")
