@@ -75,7 +75,7 @@ vf.addControlPoint( 70737.2148847 , 25891.573004 , 8.4970583145 , 16.994116629 )
 
 vf.setPointScale(1.5)
 vf.updateVectorField()
-
+vf.setVisible(False)
 
 
 # model
@@ -220,6 +220,9 @@ menu.addButton("Go to camera 1", 'cam.setPosition(Vector3(46930.8, 7805.12, 6543
 
 # fog
 menu.addButton("Toggle fog", 'tt.toggleFog()')
+
+# wind
+menu.addButton("Toggle wind", "vf.toogleVisible()")
 
 # height scale
 hscale_label = menu.addLabel("Height scale: ")

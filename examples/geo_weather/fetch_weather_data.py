@@ -7,8 +7,8 @@ import numpy as np
 import sqlite3
 import pandas as pd
 
-csv_filename = "testdata/south_west/south_west_stations.csv"
-db_filename = "testdata/south_west/south_west_stations.db"
+csv_filename = "testdata/vic_usgs/south_west_stations.csv"
+db_filename = "testdata/vic_usgs/south_west_stations.db"
 
 # open database
 conn = sqlite3.connect(db_filename)
@@ -23,6 +23,10 @@ c.execute('''CREATE TABLE IF NOT EXISTS observations
              (id text, local_date_time text, local_date_time_full text,  
               apparent_t real, delta_t real, air_temp real, rain_trace text, rel_hum real, wind_dir text, wind_spd_kmh real,
               UNIQUE(id, local_date_time_full))''')
+
+# Create time point table
+c.execute('''CREATE TABLE IF NOT EXISTS time 
+             (id text, local_date_time_full text, UNIQUE(local_date_time_full))''')
 
 # stations
 with open(csv_filename, 'rb') as csvfile:
@@ -77,6 +81,10 @@ with open(csv_filename, 'rb') as csvfile:
             print query_str
             c.execute(query_str)
 
+            query_str = "INSERT OR IGNORE INTO time VALUES (%s, '%s')" % (id, data[i]['local_date_time_full'])
+            print query_str
+            c.execute(query_str)
+
 # commit the change
 conn.commit()
 # close database
@@ -86,6 +94,7 @@ conn.close()
 
 
 # TESTING: print out to check
+"""
 conn = sqlite3.connect(db_filename)
 c = conn.cursor()
 c.execute("SELECT name FROM sqlite_master WHERE type='table';")
@@ -95,6 +104,7 @@ for table_name in tables:
     table_name = table_name[0]
     table = pd.read_sql_query("SELECT * from %s" % table_name, conn)
     #print table
-    table.to_csv('testdata/south_west/south_west_stations_' + table_name + '.csv', index_label='index')
+    table.to_csv('testdata/vic_usgs/south_west_stations_' + table_name + '.csv', index_label='index')
 # close database
 conn.close()
+"""
