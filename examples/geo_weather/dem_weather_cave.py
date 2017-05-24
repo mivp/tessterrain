@@ -23,6 +23,8 @@ hscale_min = 0.2
 hscale_max = 4
 hscale_value = data_height_scale
 
+display_ray = False
+
 if DATASHOW == 0:
     terrains = (
         "s38_e141", "s38_e142", "s38_e143",
@@ -56,6 +58,8 @@ tt.setHeightScale(1.0 * data_height_scale);
 #vector field
 vf = vectorfield.initialize()
 vf.init(0, 0, 109379.614343, 72919.7428954, 4000, 3500);
+#vf.loadElevationFromFile("vic_sw_elevation2.txt");
+vf.setElevationScale(1.0 * data_height_scale);
 
 vf.addControlPoint( 72195.6097426 , 10213.8282815 , 4.9193495505 , 9.838699101 );
 vf.addControlPoint( 80216.7814611 , 8390.83470912 , 6.36396103068 , 6.36396103068 );
@@ -106,7 +110,11 @@ def setHeightScale(value):
     hscale_label.setText('Height scale: ' + str(val))
     hscale_value = val * data_height_scale
     tt.setHeightScale(hscale_value)
+    vf.setElevationScale(hscale_value)
 
+def toggleRay():
+    display_ray = not display_ray
+    line.setVisible(display_ray)
 
 def calWindDir(str):
     winddir = numpy.asarray([0, 0, 0])
@@ -217,12 +225,17 @@ mm.setMainMenu(menu)
 # cameras
 menu.addButton("Go to camera 1", 'cam.setPosition(Vector3(46930.8, 7805.12, 65433.8)), cam.setOrientation(Quaternion(-0.99, 0.07, 0.07, 0.01))')
 
+menu.addButton("Next terrain display mode", 'tt.nextDisplayMode()')
+
 # fog
 menu.addButton("Toggle fog", 'tt.toggleFog()')
 
 # wind
 menu.addButton("Toggle wind", "vf.toggleVisible()")
 menu.addButton("Next particle type", "vf.nextParticleType()")
+
+# ray
+menu.addButton("Toggle ray", "toggleRay()")
 
 # height scale
 hscale_label = menu.addLabel("Height scale: ")
@@ -233,13 +246,13 @@ pointscale.getSlider().setValue(val)
 pointscale.getWidget().setWidth(200)
 setHeightScale(val)
 
-
 # ray line
 line = LineSet.create()
 l = line.addLine()
 l.setThickness(0.02)
 line.setEffect('colored -e red')
 line.setPosition(Vector3(0, 0, 0))
+line.setVisible(display_ray)
 
 # ui
 # to display stations' names
