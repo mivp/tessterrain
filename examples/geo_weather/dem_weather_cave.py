@@ -52,8 +52,8 @@ for i in range(len(terrains)):
 
 # go colormap mode
 tt.nextDisplayMode()
+tt.nextDisplayMode()
 tt.setHeightScale(1.0 * data_height_scale);
-
 
 #vector field
 vf = vectorfield.initialize()
@@ -113,6 +113,7 @@ def setHeightScale(value):
     vf.setElevationScale(hscale_value)
 
 def toggleRay():
+    global display_ray, line
     display_ray = not display_ray
     line.setVisible(display_ray)
 
