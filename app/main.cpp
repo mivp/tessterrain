@@ -159,6 +159,20 @@ void doMovement() {
             tessTerrains[i]->nextDisplayMode();
         keys[GLFW_KEY_N] = false;
     }
+    if(keys[GLFW_KEY_O]) {
+        float alpha = tessTerrains[0]->getOverlayAlpha();
+        alpha += 0.05;
+        if(alpha > 1.0)
+            alpha = 0.5;
+        for(int i=0; i < tessTerrains.size(); i++)
+            tessTerrains[i]->setOverlayAlpha(alpha);
+        keys[GLFW_KEY_O] = false;
+    }
+    if(keys[GLFW_KEY_R]) {
+        for(int i=0; i < tessTerrains.size(); i++)
+            tessTerrains[i]->reloadOverlay();
+        keys[GLFW_KEY_R] = false;
+    }
     camera->Update();
 }
 
@@ -270,9 +284,7 @@ int main(int argc, char* argv[]) {
         
         for(int i=0; i < files.size(); i++) {
             string name = "";
-            name.append("testdata/vic_usgs/");
-            name.append(files[i]);
-            name.append("/");
+            name.append("/Users/toand/git/mivp/terrain/tessterrain/examples/sa4overlay/config/");
             name.append(files[i]);
             name.append("_1arc_v3.ini");
             inifiles.push_back(name);

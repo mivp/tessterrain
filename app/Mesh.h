@@ -17,61 +17,61 @@ using std::string;
 
 namespace tessterrain {
     
-struct Vertex
-{
-    glm::vec3 position; // where each dot is located
-    glm::vec3 normal; // the normal for this dot
-    glm::vec2 uv; // uvs for texture coordinate mapping
-    Vertex(glm::vec3 p, glm::vec3 n, glm::vec2 t) {
-        position = p; normal = n; uv = t;
-    }
-};
-
-/**
-Create full mesh from heighmap
-*/
-class Mesh {
+    struct Vertex
+    {
+        glm::vec3 position; // where each dot is located
+        glm::vec3 normal; // the normal for this dot
+        glm::vec2 uv; // uvs for texture coordinate mapping
+        Vertex(glm::vec3 p, glm::vec3 n, glm::vec2 t) {
+            position = p; normal = n; uv = t;
+        }
+    };
     
-private:
-    unsigned int m_vbo;
-    unsigned int m_ibo;
-    unsigned int m_vao;
+    /**
+     Create full mesh from heighmap
+     */
+    class Mesh {
+        
+    private:
+        unsigned int m_vbo;
+        unsigned int m_ibo;
+        unsigned int m_vao;
+        
+        glm::mat4 m_modelMatrix;
+        
+        bool m_initialized;
+        
+        
+    public:
+        // mesh data
+        vector<Vertex> vertexes;
+        vector<unsigned int> indices;
+        
+        // display
+        bool m_wireframe;
+        Material* m_material;
+        
+    private:
+        void setup();
+        
+    public:
+        Mesh();
+        ~Mesh();
+        
+        void moveTo(glm::vec3 pos);
+        void render(Camera* cam);
+    };
     
-    glm::mat4 m_modelMatrix;
+    /**
+     Create meshes
+     */
+    class MeshUtils {
+        
+    public:
+        static Mesh* cube(float size);
+        static Mesh* sphere(float radius, int slices, int stacks);
+    };
     
-    bool m_initialized;
-    
-    
-public:
-    // mesh data
-    vector<Vertex> vertexes;
-    vector<unsigned int> indices;
-    
-    // display
-    bool m_wireframe;
-    Material* m_material;
-    
-private:
-    void setup();
-    
-public:
-    Mesh();
-    ~Mesh();
-    
-    void moveTo(glm::vec3 pos);
-    void render(Camera* cam);
-};
-
-/**
-Create meshes
-*/
-class MeshUtils {
-
-public:
-    static Mesh* cube(float size);
-    static Mesh* sphere(float radius, int slices, int stacks);
-};
-
 }; //namespace tessterrain
 
 #endif

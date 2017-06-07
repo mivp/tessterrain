@@ -70,6 +70,18 @@ public:
             terrains[i]->toggleFog();
     }
 
+    void setOverlayAlpha(float a)
+    {
+        for(int i=0; i < terrains.size(); i++)
+            terrains[i]->setOverlayAlpha(a);   
+    }
+
+    void reloadOverlay()
+    {
+        for(int i=0; i < terrains.size(); i++)
+            terrains[i]->reloadOverlay();
+    }
+
     vector<tessterrain::TessTerrain*> terrains;
     bool visible;
     bool updateviewport;
@@ -154,6 +166,8 @@ BOOST_PYTHON_MODULE(tessterrain)
     PYAPI_METHOD(TessTerrainRenderModule, moveTo)
     PYAPI_METHOD(TessTerrainRenderModule, setHeightScale)
     PYAPI_METHOD(TessTerrainRenderModule, toggleFog)
+    PYAPI_METHOD(TessTerrainRenderModule, setOverlayAlpha)
+    PYAPI_METHOD(TessTerrainRenderModule, reloadOverlay)
     ;
 
     def("initialize", initialize, PYAPI_RETURN_REF);

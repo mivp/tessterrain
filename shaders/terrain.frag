@@ -29,7 +29,9 @@ uniform struct MaterialInfo
     float shininess;    // Specular shininess exponent
 } material;
 
-uniform sampler2D tex0;
+uniform sampler2D tex0; // texture
+uniform sampler2D tex1; // overlay texture
+uniform float overlayAlpha = 0.7;
 
 uniform float colorStop1 = 0.0;
 uniform float colorStop2 = 4.0;
@@ -192,12 +194,27 @@ vec4 shadeTexturedAndLit()
 {
     // Get texture color
     vec4 texColor = texture (tex0, texCoords);
-
+    
     // Calculate the lighting model, keeping the specular component separate
     vec3 ambientAndDiff, spec;
     phongModel( ambientAndDiff, spec );
     vec4 color = vec4( ambientAndDiff, 1.0 ) * texColor + vec4( spec, 1.0 );
     return color;
+}
+
+subroutine( ShaderModelType )
+vec4 shadeTexturedAndOverlay()
+{
+    vec4 c0 = texture (tex0, texCoords);
+    vec4 c1 = texture (tex1, texCoords);
+    
+    if(c1.a < 0.1)
+        return c0;
+
+    if(c1.a > 0.9)
+        return c1;
+
+    return vec4(mix(c0.rgb, c1.rgb, overlayAlpha), 1.0);
 }
 
 void main()
