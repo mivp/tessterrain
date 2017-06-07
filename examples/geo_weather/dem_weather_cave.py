@@ -51,8 +51,7 @@ for i in range(len(terrains)):
     tt.addTerrain(filename)
 
 # go colormap mode
-tt.nextDisplayMode()
-tt.nextDisplayMode()
+tt.nextDisplayMode(-1)
 tt.setHeightScale(1.0 * data_height_scale);
 
 #vector field
@@ -226,7 +225,7 @@ mm.setMainMenu(menu)
 # cameras
 menu.addButton("Go to camera 1", 'cam.setPosition(Vector3(46930.8, 7805.12, 65433.8)), cam.setOrientation(Quaternion(-0.99, 0.07, 0.07, 0.01))')
 
-menu.addButton("Next terrain display mode", 'tt.nextDisplayMode()')
+menu.addButton("Next terrain display mode", 'tt.nextDisplayMode(1)')
 
 # fog
 menu.addButton("Toggle fog", 'tt.toggleFog()')
@@ -374,7 +373,7 @@ def onEvent():
                 break
 
     if (e.getServiceType() == ServiceType.Wand and e.isButtonDown(EventFlags.Button4) ) :
-	tt.nextDisplayMode()
+	tt.nextDisplayMode(1)
 	
 
 setEventFunction(onEvent)

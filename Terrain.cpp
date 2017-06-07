@@ -21,7 +21,8 @@ namespace tessterrain {
      Tessellation Terrain
      */
     TessTerrain::TessTerrain(): m_material(0), m_initialized(false), m_texHightmap(0), m_texture(0),
-    m_vbo(0), m_vao(0),  m_displayMode(0), m_overlay(0), m_overlayAlpha(0.5)
+    m_vbo(0), m_vao(0),  m_displayMode(0), m_overlay(0), m_overlayAlpha(0.5), 
+    m_fog(false), m_reload(false)
     {
         
         m_displayModeNames.push_back("shadeSimpleWireFrame");
@@ -32,6 +33,7 @@ namespace tessterrain {
         m_displayModeNames.push_back("shadeTextured");
         m_displayModeNames.push_back("shadeTexturedAndLit");
         m_displayModeNames.push_back("shadeTexturedAndOverlay");
+	m_displayModeNames.push_back("shadeTexturedAndOverlayAndLit");
     }
     
     TessTerrain::~TessTerrain() {
@@ -112,16 +114,30 @@ namespace tessterrain {
                 m_displayMode = DisplayModeCount - 1;
         }
         
-        if(!m_texture && (m_displayMode == Textured || m_displayMode == TexturedAndLit) )
+        if(m_files.size() < 2 && (m_displayMode == Textured || m_displayMode == TexturedAndLit) )
             nextDisplayMode(forward);
         
-        if(!m_overlay && m_displayMode == TexturedAndOverlay)
+        if(m_files.size() < 3 && (m_displayMode == TexturedAndOverlay || m_displayMode == TexturedAndOverlayAndLit) )
             nextDisplayMode(forward);
         
         if (m_displayMode == WorldNormals || m_displayMode == LightingFactor)
             nextDisplayMode(forward);
         
         cout << "display mode: " << m_displayModeNames[m_displayMode] << endl;
+    }
+
+    void TessTerrain::nextDisplayMode(int num) {
+	int numsteps;
+	bool forward = true;
+	if (num < 0) {
+	    numsteps = -num;
+	    forward = false;
+	}
+	else {
+	    numsteps =  num;
+	}
+	for (int i=0; i<numsteps; i++) 
+	    nextDisplayMode(forward);
     }
     
     void TessTerrain::moveTo(glm::vec3 pos) {
@@ -134,18 +150,9 @@ namespace tessterrain {
         m_verticalScale = scale * m_verticalScaleOri;
     }
     
-    void TessTerrain::toggleFog() {
-        if(m_material)
-            m_material->fogEnabled = !m_material->fogEnabled;
-    }
-    
     void TessTerrain::reloadOverlay() {
-        if(m_files.size() > 2) {
-            if(m_overlay)
-                delete m_overlay;
-            cout << "reload overlay texture from " << m_files[2] << endl;
-            m_overlay = new Texture(m_files[2].c_str(), 2, true);
-        }
+	if(m_files.size() > 2 && m_overlay)
+	    m_reload = true;
     }
     
     void TessTerrain::setup(){
@@ -222,7 +229,12 @@ namespace tessterrain {
         
         if(!m_initialized)
             setup();
-        
+
+	if(m_reload) {
+	    m_overlay->reloadData(m_files[2].c_str(), true);
+	    m_reload = false;
+	}
+
         GLSLProgram* shader = m_material->getShader();
         shader->bind();
         m_texHightmap->bind();
@@ -247,7 +259,7 @@ namespace tessterrain {
         shader->setUniform( "line.color", glm::vec4( 0.0f, 1.0f, 0.0f, 1.0f ) );
         
         // Set the fog parameters
-        shader->setUniform( "fog.enabled", m_material->fogEnabled );
+        shader->setUniform( "fog.enabled", m_fog );
         shader->setUniform( "fog.color", glm::vec4( 0.65f, 0.77f, 1.0f, 1.0f ) );
         shader->setUniform( "fog.minDistance", m_fogRange[0] );
         shader->setUniform( "fog.maxDistance", m_fogRange[1] );

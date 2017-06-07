@@ -95,10 +95,14 @@ namespace tessterrain {
     
     
     Texture::~Texture() {
-        glDeleteTextures(1, &gluid);
+	//glActiveTexture(glunit);
+	if(gluid)
+            glDeleteTextures(1, &gluid);
     }
     
     void Texture::bind() {
+	if(!gluid)
+	    return;
         glActiveTexture(glunit);
         glBindTexture(GL_TEXTURE_2D, gluid);
     }
@@ -124,6 +128,39 @@ namespace tessterrain {
         bind();
         glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, globalFormat, GL_UNSIGNED_BYTE, NULL);
     }
+
+    void Texture::reloadData(const char* filename, bool mipmap) {
+
+	int x,y,n;
+        unsigned char *data = stbi_load(filename, &x, &y, &n, 0);
+        
+        if(!data) {
+            cout << "Failed to load texture"  << endl;
+            exit(0);
+        }
+        
+        //cout << "img: " << filename << " width: " << x << " height: " << y << " comps: " << n << endl;
+        
+        //init texture
+        glActiveTexture(glunit);
+        glBindTexture(GL_TEXTURE_2D, gluid);
+	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, globalFormat, GL_UNSIGNED_BYTE, data);
+        //glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, globalFormat, GL_UNSIGNED_BYTE, data); 
+        
+	if(mipmap)
+            glGenerateMipmap(GL_TEXTURE_2D);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER); //GL_CLAMP_TO_BORDER GL_REPEAT
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, minFilter);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, magFilter);
+        glBindTexture(GL_TEXTURE_2D, 0);
+       
+	glBindTexture(GL_TEXTURE_2D, 0);
+	glActiveTexture(GL_TEXTURE0);
+
+        stbi_image_free(data);	
+    }
+
     
     // static
     unsigned int Texture::unitCount = 0;

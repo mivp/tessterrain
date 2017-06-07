@@ -12,7 +12,6 @@ namespace tessterrain {
         Kd = glm::vec3( 1.0f, 1.0f, 1.0f );
         Ks = glm::vec3( 0.3f, 0.3f, 0.3f );
         shininess = 1.0;
-        fogEnabled = true;
     }
     
     Material::~Material() {

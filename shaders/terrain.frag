@@ -217,6 +217,30 @@ vec4 shadeTexturedAndOverlay()
     return vec4(mix(c0.rgb, c1.rgb, overlayAlpha), 1.0);
 }
 
+subroutine( ShaderModelType )
+vec4 shadeTexturedAndOverlayAndLit()
+{
+    vec4 c0 = texture (tex0, texCoords);
+    vec4 c1 = texture (tex1, texCoords);
+
+    vec4 texColor;    
+
+    if(c1.a < 0.1)
+        texColor = c0;
+
+    else if(c1.a > 0.9)
+        texColor = c1;
+
+    else
+    	texColor = vec4(mix(c0.rgb, c1.rgb, overlayAlpha), 1.0);
+
+    // Calculate the lighting model, keeping the specular component separate
+    vec3 ambientAndDiff, spec;
+    phongModel( ambientAndDiff, spec );
+    vec4 color = vec4( ambientAndDiff, 1.0 ) * texColor + vec4( spec, 1.0 );
+    return color;
+}
+
 void main()
 {
     // Compute fragment color depending upon selected shading mode

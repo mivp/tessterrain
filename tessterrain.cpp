@@ -45,10 +45,10 @@ public:
             terrains[i]->printInfo();
     }
 
-    void nextDisplayMode()
+    void nextDisplayMode(int num)
     {  
         for(int i=0; i < terrains.size(); i++)
-            terrains[i]->nextDisplayMode();
+            terrains[i]->nextDisplayMode(num);
     }
 
     void moveTo(const int index, const float x, const float y, const float z)

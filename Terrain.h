@@ -52,6 +52,8 @@ namespace tessterrain {
         Texture* m_texture;
         Texture* m_overlay;
         float m_overlayAlpha;
+	bool m_fog;
+	bool m_reload;
         
         int m_patchCount;
         unsigned int m_vbo;
@@ -71,9 +73,13 @@ namespace tessterrain {
             Textured,
             TexturedAndLit,
             TexturedAndOverlay,
+	    TexturedAndOverlayAndLit,
             DisplayModeCount
         };
         
+    private:
+	void nextDisplayMode(bool forward=true);
+
     public:
         TessTerrain();
         ~TessTerrain();
@@ -82,12 +88,11 @@ namespace tessterrain {
         void printInfo();
         
         void calViewportMatrix(int width, int height);
-        void nextDisplayMode(bool forward=true);
-        void nextDisplayMode(int num, bool forward=true) { for(int i=0; i < num; i++) nextDisplayMode(forward); }
+        void nextDisplayMode(int num = 1); // position ~ forward, nagative ~ backward
         void moveTo(glm::vec3 pos);
         void moveTo(float x, float y, float z) { moveTo(glm::vec3(x, y, z)); }
         void setHeightScale(float scale);
-        void toggleFog();
+        void toggleFog() { m_fog = !m_fog; }
         float getOverlayAlpha() { return m_overlayAlpha; }
         void setOverlayAlpha(float a) { m_overlayAlpha = a; if(m_overlayAlpha<0) m_overlayAlpha=0; if(m_overlayAlpha>1) m_overlayAlpha=1;}
         void reloadOverlay();

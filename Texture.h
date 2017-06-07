@@ -25,6 +25,7 @@ namespace tessterrain {
         int getWidth();
         int getHeight();
         void resize(unsigned int _width, unsigned int _height);
+	void reloadData(const char* filename, bool mipmap = false);
         
         static void resetUnit(int textureUnitOffset = 0);
         static Texture* newFromNextUnit(unsigned int _width, unsigned int _height, unsigned int _format=GL_RGBA, unsigned int _globalFormat=GL_RGBA);

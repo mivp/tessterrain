@@ -4,3 +4,7 @@ build
 testdata
 orun.log
 .idea
+tessterrain.so
+.eqcfg.eqc
+_eqcfg.eqc
+vectorfield.so
