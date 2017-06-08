@@ -125,7 +125,7 @@ mm.setMainMenu(menu)
 
 # cameras
 menu.addButton("Go to camera 1", 'cam.setPosition(Vector3(46930.8, 7805.12, 65433.8)), cam.setOrientation(Quaternion(-0.99, 0.07, 0.07, 0.01))')
-menu.addButton("Go to camera 2 (topview)", 'cam.setPosition(Vector3(123302.47, 77291.67, 104510.23), cam.setOrientation(Quaternion(-0.92, 0.38, 0.05, 0.02))')
+menu.addButton("Go to camera 2 (topview)", 'cam.setPosition(Vector3(123302.47, 77291.67, 104510.23)), cam.setOrientation(Quaternion(-0.92, 0.38, 0.05, 0.02))')
 
 
 menu.addButton("Next terrain display mode", 'tt.nextDisplayMode(1)')
