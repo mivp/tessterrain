@@ -22,7 +22,7 @@ namespace tessterrain {
      */
     TessTerrain::TessTerrain(): m_material(0), m_initialized(false), m_texHightmap(0), m_texture(0),
     m_vbo(0), m_vao(0),  m_displayMode(0), m_overlay(0), m_overlayAlpha(0.5), 
-    m_fog(false), m_reload(false)
+    m_fog(false), m_reload(false), m_circleVao(0), m_circleMaterial(0), m_circleVao2(0)
     {
         
         m_displayModeNames.push_back("shadeSimpleWireFrame");
@@ -48,6 +48,14 @@ namespace tessterrain {
             glDeleteVertexArrays(1,&m_vao);
             glDeleteBuffers(1,&m_vbo);
         }
+        if(m_circleVao > 0)
+            glDeleteVertexArrays(1,&m_circleVao);
+        if(m_circleVao2 > 0)
+            glDeleteVertexArrays(1,&m_circleVao2);
+        if(m_material)
+            delete m_material;
+        if(m_circleMaterial)
+            delete m_circleMaterial;
 #endif
     }
     
@@ -123,7 +131,7 @@ namespace tessterrain {
         if (m_displayMode == WorldNormals || m_displayMode == LightingFactor)
             nextDisplayMode(forward);
         
-        cout << "display mode: " << m_displayModeNames[m_displayMode] << endl;
+        // cout << "display mode: " << m_displayModeNames[m_displayMode] << endl;
     }
 
     void TessTerrain::nextDisplayMode(int num) {
@@ -159,6 +167,9 @@ namespace tessterrain {
         
         if(!m_material)
             m_material = new TessMaterial();
+        
+        if(!m_circleMaterial)
+            m_circleMaterial = new SSMaterial();
         
         // textures
         m_texHightmap = new Texture(m_files[0].c_str(), 0, false);
@@ -230,10 +241,10 @@ namespace tessterrain {
         if(!m_initialized)
             setup();
 
-	if(m_reload) {
-	    m_overlay->reloadData(m_files[2].c_str(), true);
-	    m_reload = false;
-	}
+        if(m_reload) {
+            m_overlay->reloadData(m_files[2].c_str(), true);
+            m_reload = false;
+        }
 
         GLSLProgram* shader = m_material->getShader();
         shader->bind();
@@ -320,6 +331,144 @@ namespace tessterrain {
         // clean up
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, 0);
+        glUseProgram(0);
+        //glDisable(GL_DEPTH_TEST);
+        //glCullFace(GL_NONE);
+    }
+    
+    void TessTerrain::renderWithZoom(const float MV[16], const float P[16], const float PZoom[16]) {
+        
+        if(!m_initialized)
+            setup();
+        
+        int x = m_viewportSize[0]/2;
+        int y = m_viewportSize[1]/2;
+       
+        // render magnifier / quad
+        glEnable(GL_STENCIL_TEST);
+        
+        glColorMask( GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE );
+        glStencilFunc( GL_ALWAYS, 1, ~0 );
+        glDepthMask(GL_FALSE);
+        glStencilOp( GL_KEEP, GL_KEEP, GL_REPLACE );
+        
+        drawCircle(x, y, 100);
+        
+        glColorMask( GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE );
+        glStencilFunc( GL_EQUAL, 0, ~0 );
+        glDepthMask(GL_TRUE);
+        glStencilOp( GL_KEEP, GL_KEEP, GL_KEEP );
+        
+        render(MV, P);
+        drawCircle2(x, y, 105);
+        
+        glColorMask( GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE );
+        glStencilFunc( GL_EQUAL, 1, ~0 );
+        glDepthMask(GL_TRUE);
+        glStencilOp( GL_KEEP, GL_KEEP, GL_KEEP );
+        
+        
+        render(MV, PZoom);
+        
+        glDisable(GL_STENCIL_TEST);
+        
+    }
+    
+    void TessTerrain::calCircleVertices(int sx, int sy, float r, vector<glm::vec2> &vertices) {
+        float dx = 2 / m_viewportSize[0];
+        float dy = 2 / m_viewportSize[1];
+        glm::vec2 center = glm::vec2(sx, sy);
+        
+        vertices.clear();
+        vertices.push_back(glm::vec2(-r, 0));
+        float step = 3.14 / 20;
+        float x, y;
+        for (float phi = 3.14; phi > 0; phi -= step) {
+            x = r * cos(phi);
+            y = r * sin(phi);
+            vertices.push_back(glm::vec2(x, y));
+            vertices.push_back(glm::vec2(x, -y));
+        }
+        vertices.push_back(glm::vec2(r, 0));
+        
+        for (int i=0; i < vertices.size(); i++) {
+            vertices[i] = center + vertices[i];
+            vertices[i][0] = -1 + dx*vertices[i][0];
+            vertices[i][1] = -1*(-1 + dy*vertices[i][1]);
+        }
+
+    }
+    
+    void TessTerrain::drawCircle(int sx, int sy, float r) {
+        
+        GLSLProgram* shader = m_circleMaterial->getShader();
+        shader->bind();
+        
+        if (!m_circleVao)
+        {
+            vector<glm::vec2> vertices;
+            calCircleVertices(sx, sy, r, vertices);
+            
+            glGenVertexArrays(1, &m_circleVao);
+            glBindVertexArray(m_circleVao);
+            
+            unsigned int circleVbo;
+            glGenBuffers(1, &circleVbo);
+            
+            glBindBuffer(GL_ARRAY_BUFFER, circleVbo);
+            glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec2)*vertices.size(), &vertices[0], GL_STATIC_DRAW);
+            
+            unsigned int val = glGetAttribLocation(shader->getHandle(), "InVertex");
+            glEnableVertexAttribArray(val);
+            glVertexAttribPointer(val, 2, GL_FLOAT, GL_FALSE, sizeof(glm::vec2), (const GLvoid*)0);
+            
+            glBindVertexArray(0);
+            
+            m_numCircle = vertices.size();
+        }
+        
+        glBindVertexArray(m_circleVao);
+        
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, m_numCircle);
+        
+        glBindVertexArray(0);
+        glUseProgram(0);
+     
+    }
+    
+    void TessTerrain::drawCircle2(int sx, int sy, float r) {
+        
+        GLSLProgram* shader = m_circleMaterial->getShader();
+        shader->bind();
+        
+        if (!m_circleVao2)
+        {
+            vector<glm::vec2> vertices;
+            calCircleVertices(sx, sy, r, vertices);
+            
+            glGenVertexArrays(1, &m_circleVao2);
+            glBindVertexArray(m_circleVao2);
+            
+            unsigned int circleVbo;
+            glGenBuffers(1, &circleVbo);
+            
+            glBindBuffer(GL_ARRAY_BUFFER, circleVbo);
+            glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec2)*vertices.size(), &vertices[0], GL_STATIC_DRAW);
+            
+            unsigned int val = glGetAttribLocation(shader->getHandle(), "InVertex");
+            glEnableVertexAttribArray(val);
+            glVertexAttribPointer(val, 2, GL_FLOAT, GL_FALSE, sizeof(glm::vec2), (const GLvoid*)0);
+            
+            glBindVertexArray(0);
+            
+            m_numCircle = vertices.size();
+        }
+        
+        glBindVertexArray(m_circleVao2);
+        
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, m_numCircle);
+        
+        glBindVertexArray(0);
         glUseProgram(0);
         
     }

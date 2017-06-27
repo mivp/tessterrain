@@ -98,6 +98,7 @@ class Camera {
 		glm::vec3 mouse_position;
 
 		glm::mat4 projection;
+        glm::mat4 projectionZoom;
 		glm::mat4 view;
 		glm::mat4 model;
         glm::mat4 MV;

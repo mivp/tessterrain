@@ -52,8 +52,8 @@ namespace tessterrain {
         Texture* m_texture;
         Texture* m_overlay;
         float m_overlayAlpha;
-	bool m_fog;
-	bool m_reload;
+        bool m_fog;
+        bool m_reload;
         
         int m_patchCount;
         unsigned int m_vbo;
@@ -62,6 +62,12 @@ namespace tessterrain {
         vector<string> m_displayModeNames;
         vector<unsigned int> m_displayModeSubroutines;
         int m_displayMode;
+        
+        //quad
+        unsigned int m_circleVao;
+        unsigned int m_circleVao2;
+        Material* m_circleMaterial;
+        int m_numCircle;
         
     public:
         enum DisplayMode {
@@ -73,12 +79,13 @@ namespace tessterrain {
             Textured,
             TexturedAndLit,
             TexturedAndOverlay,
-	    TexturedAndOverlayAndLit,
+            TexturedAndOverlayAndLit,
             DisplayModeCount
         };
         
     private:
-	void nextDisplayMode(bool forward=true);
+        void nextDisplayMode(bool forward=true);
+        void calCircleVertices(int sx, int sy, float r, vector<glm::vec2> &vertices);
 
     public:
         TessTerrain();
@@ -99,6 +106,9 @@ namespace tessterrain {
         
         void setup();
         void render(const float MV[16], const float P[16]);
+        void renderWithZoom(const float MV[16], const float P[16], const float PZoom[16]);
+        void drawCircle(int sx, int sy, float radius);
+        void drawCircle2(int sx, int sy, float radius);
     };
     
 }; //namespace tessterrain

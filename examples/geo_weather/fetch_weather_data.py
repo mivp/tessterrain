@@ -5,7 +5,6 @@ import json
 import requests
 import numpy as np
 import sqlite3
-import pandas as pd
 
 csv_filename = "testdata/vic_usgs/south_west_stations.csv"
 db_filename = "testdata/vic_usgs/south_west_stations.db"

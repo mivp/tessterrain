@@ -156,7 +156,7 @@ void doMovement() {
     }
     if(keys[GLFW_KEY_N]) {
         for(int i=0; i < tessTerrains.size(); i++)
-            tessTerrains[i]->nextDisplayMode();
+            tessTerrains[i]->nextDisplayMode(1);
         keys[GLFW_KEY_N] = false;
     }
     if(keys[GLFW_KEY_O]) {
@@ -197,12 +197,15 @@ void mainLoop()
         //glClearColor(1.0f,0.5f,0.5f,1.0f);
     
         // render terrain
-        float* MV, *P;
+        float* MV, *P, *PZoom;
         MV = (float*)glm::value_ptr(camera->MV);
         P = (float*)glm::value_ptr(camera->projection);
+        PZoom = (float*)glm::value_ptr(camera->projectionZoom);
         
-        for(int i=0; i < tessTerrains.size(); i++)
-            tessTerrains[i]->render(MV, P);
+        for(int i=0; i < tessTerrains.size(); i++) {
+            //tessTerrains[i]->render(MV, P);
+            tessTerrains[i]->renderWithZoom(MV, P, PZoom);
+        }
         
         // render objects
         for(int i = 0; i < objects.size(); i++)
@@ -255,10 +258,10 @@ int main(int argc, char* argv[]) {
         files.push_back("s36_e146");
         files.push_back("s36_e147");
         */
-        files.push_back("s37_e141");
-        files.push_back("s37_e142");
-        files.push_back("s37_e143");
-        files.push_back("s37_e144");
+        //files.push_back("s37_e141");
+        //files.push_back("s37_e142");
+        //files.push_back("s37_e143");
+        //files.push_back("s37_e144");
         //files.push_back("s37_e145");
         //files.push_back("s37_e146");
         //files.push_back("s37_e147");
