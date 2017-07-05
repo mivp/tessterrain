@@ -17,6 +17,25 @@ using std::string;
 
 namespace tessterrain {
     
+    struct TerrainInfo {
+        glm::dvec2 offset;
+        glm::vec2 heightRange;
+        glm::vec2 res;  // hres wres
+        float bbox[6];
+        string name;
+        string terrain;
+        string texture;
+        string overlay;
+    };
+    
+    enum LoadState {
+        STATE_NONE = 0,
+        STATE_INQUEUE,
+        STATE_LOADING,
+        STATE_DELETING,
+        STATE_LOADED
+    };
+    
     /**
      Tessellation terrain
      */
@@ -24,16 +43,17 @@ namespace tessterrain {
         
     private:
         //terrain
+        TerrainInfo m_info;
+        glm::vec3 m_globalHeightRange;
+        
+        LoadState m_loadState;
+        
         //original data read from ini file
-        vector<string> m_files;     // highmap texture
         glm::vec2 m_size;
-        glm::vec2 m_horizontalRes;
-        glm::vec2 m_horizontalScale;// x scale, z scale
-        glm::vec2 m_heightRangeOri;    // (min, max)
-        glm::vec2 m_verticalScaleOri;  // (min height, max - min height)
         glm::vec2 m_fogRange;
-        float m_heightRangeScale;
         bool m_initialized;
+        float m_heightRangeScale;
+        glm::vec2 m_horizontalScale;
         
         //to pass to shaders
         glm::vec2 m_heightRange;
@@ -84,16 +104,31 @@ namespace tessterrain {
         };
         
     private:
+        void init();
         void nextDisplayMode(bool forward=true);
         void calCircleVertices(int sx, int sy, float r, vector<glm::vec2> &vertices);
+        void setup();
 
     public:
-        TessTerrain();
+        TessTerrain(TerrainInfo info, glm::vec3 globalHeightRange);
         ~TessTerrain();
         
-        void init(string configfile);
-        void printInfo();
+        void print();
         
+        //
+        string getName() { return m_info.name; }
+        int getState() { return m_loadState; }
+        float* getBBox() { return m_info.bbox; }
+        void loadTextures();
+        void unloadTextures();
+        
+        void setState(LoadState state) { m_loadState = state; }
+        bool inQueue() { return m_loadState == STATE_INQUEUE; }
+        bool canAddToQueue() { return m_loadState == STATE_NONE; }
+        bool isLoading() { return m_loadState == STATE_LOADING; }
+        bool isLoaded()  { return m_loadState == STATE_LOADED; }
+        
+        //
         void calViewportMatrix(int width, int height);
         void nextDisplayMode(int num = 1); // position ~ forward, nagative ~ backward
         void moveTo(glm::vec3 pos);
@@ -104,7 +139,6 @@ namespace tessterrain {
         void setOverlayAlpha(float a) { m_overlayAlpha = a; if(m_overlayAlpha<0) m_overlayAlpha=0; if(m_overlayAlpha>1) m_overlayAlpha=1;}
         void reloadOverlay();
         
-        void setup();
         void render(const float MV[16], const float P[16]);
         void renderWithZoom(const float MV[16], const float P[16], const float PZoom[16]);
         void drawCircle(int sx, int sy, float radius);

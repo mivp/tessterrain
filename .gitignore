@@ -2,6 +2,7 @@
 dist
 build
 testdata
+terraindata
 orun.log
 .idea
 tessterrain.so

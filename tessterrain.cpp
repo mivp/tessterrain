@@ -3,19 +3,20 @@
 #include <iostream>
 #include <vector>
 
-#include "Terrain.h"
+#include "TerrainManager.h"
 
 using namespace std;
 using namespace omega;
+using namespace tessterrain;
 
 ///////////////////////////////////////////////////////////////////////////////
 class TessTerrainRenderModule : public EngineModule
 {
 public:
     TessTerrainRenderModule() :
-        EngineModule("TessTerrainRenderModule"), visible(true), updateviewport(false)
+        EngineModule("TessTerrainRenderModule"), visible(true), updateviewport(false), terrains(0)
     {
-    	terrains.clear();
+
     }
 
     virtual void initializeRenderer(Renderer* r);
@@ -28,61 +29,45 @@ public:
     
     virtual void dispose()
     {
-        for(int i=0; i < terrains.size(); i++)
-            delete terrains[i];
+        if (terrains)
+            delete terrains;
     }
 
-    void addTerrain(const string& option_file)
-    {
-        tessterrain::TessTerrain* terrain = new tessterrain::TessTerrain();
-        terrain->init(option_file);
-        terrains.push_back(terrain);
+    void initTerrain(const string& inifile) {
+        terrains = new TerrainManager(inifile);
     }
 
     void printInfo()
     {
-        for(int i=0; i < terrains.size(); i++)
-            terrains[i]->printInfo();
+        terrains->print();
     }
 
     void nextDisplayMode(int num)
     {  
-        for(int i=0; i < terrains.size(); i++)
-            terrains[i]->nextDisplayMode(num);
-    }
-
-    void moveTo(const int index, const float x, const float y, const float z)
-    {
-        if(index < 0 || index >= terrains.size())
-            return;
-        terrains[index]->moveTo(x, y, z);
+        terrains->nextDisplayMode(num);
     }
 
     void setHeightScale(const float scale)
     {
-        for(int i=0; i < terrains.size(); i++)
-            terrains[i]->setHeightScale(scale);
+        terrains->setHeightScale(scale);
     }
 
     void toggleFog()
     {
-        for(int i=0; i < terrains.size(); i++)
-            terrains[i]->toggleFog();
+        terrains->toggleFog();
     }
 
     void setOverlayAlpha(float a)
     {
-        for(int i=0; i < terrains.size(); i++)
-            terrains[i]->setOverlayAlpha(a);   
+        terrains->setOverlayAlpha(a);   
     }
 
     void reloadOverlay()
     {
-        for(int i=0; i < terrains.size(); i++)
-            terrains[i]->reloadOverlay();
+        terrains->reloadOverlay();
     }
 
-    vector<tessterrain::TessTerrain*> terrains;
+    TerrainManager* terrains;
     bool visible;
     bool updateviewport;
 };
@@ -109,22 +94,21 @@ public:
 	
     	    if(module->visible)
     	    { 
-                if(!module->updateviewport && module->terrains.size() > 0) {
+                if(!module->updateviewport) {
 
-                    for(int i=0; i < module->terrains.size(); i++) {
-                        module->terrains[i]->calViewportMatrix(context.viewport.width(), context.viewport.height());
-                    }
-                    
+                    module->terrains->calViewportMatrix(context.viewport.width(), context.viewport.height());       
                     module->updateviewport = true;
                 }
-	        
+
+                Vector3f cp = context.camera->getPosition();
+                float campos[3] = {cp[0], cp[1], cp[2]};
                 float* MV = context.modelview.cast<float>().data();
                 float* P = context.projection.cast<float>().data();
-                for(int i=0; i < module->terrains.size(); i++) {
-                    module->terrains[i]->render(MV, P);
-                }
+                float* MVP = (context.projection*context.modelview).cast<float>().data();
+                
+                module->terrains->updateVisibility(MVP, campos);
+                module->terrains->render(MV, P);
                 if(oglError) return;
-		
     	    }
             
             client->getRenderer()->endDraw();
@@ -160,10 +144,9 @@ BOOST_PYTHON_MODULE(tessterrain)
 {
     //
     PYAPI_REF_BASE_CLASS(TessTerrainRenderModule)
-    PYAPI_METHOD(TessTerrainRenderModule, addTerrain)
+    PYAPI_METHOD(TessTerrainRenderModule, initTerrain)
     PYAPI_METHOD(TessTerrainRenderModule, printInfo)
     PYAPI_METHOD(TessTerrainRenderModule, nextDisplayMode)
-    PYAPI_METHOD(TessTerrainRenderModule, moveTo)
     PYAPI_METHOD(TessTerrainRenderModule, setHeightScale)
     PYAPI_METHOD(TessTerrainRenderModule, toggleFog)
     PYAPI_METHOD(TessTerrainRenderModule, setOverlayAlpha)

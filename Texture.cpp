@@ -12,31 +12,20 @@ namespace tessterrain {
     const unsigned int Texture::NEAREST = GL_NEAREST;
     const unsigned int Texture::MIPMAP = GL_LINEAR_MIPMAP_LINEAR;
     
-    // for colormap
-    Texture::Texture(const char* filename, unsigned int ind, bool mipmap) {
+    void Texture::initTexture() {
         
-        int x,y,n;
-        unsigned char *data = stbi_load(filename, &x, &y, &n, 0);
+        if(initialized)
+            return;
         
-        if(!data) {
-            cout << "Failed to load texture"  << endl;
-            exit(0);
-        }
-        
-        //cout << "img: " << filename << " width: " << x << " height: " << y << " comps: " << n << endl;
-        
-        width = x;
-        height = y;
+        // cout << "initTexture" << endl;
         
         //init texture
-        gluid = 0;
-        index = ind;
         glunit = unitFromIndex(index);
         minFilter = GL_LINEAR;
         magFilter = GL_LINEAR;
-        if(n == 1)
+        if(numChannel == 1)
             format = globalFormat = GL_RED;
-        else if (n == 3)
+        else if (numChannel == 3)
             format = globalFormat = GL_RGB;
         else
             format = globalFormat = GL_RGBA;
@@ -54,6 +43,27 @@ namespace tessterrain {
         glBindTexture(GL_TEXTURE_2D, 0);
         
         stbi_image_free(data);
+        initialized = true;
+    }
+    
+    // for colormap
+    Texture::Texture(const char* filename, unsigned int ind, bool mipmap): initialized(false) {
+        
+        int x,y;
+        this->data = stbi_load(filename, &x, &y, &numChannel, 0);
+        
+        if(!data) {
+            cout << "Failed to load texture " << filename  << endl;
+            exit(0);
+        }
+        
+        //cout << "img: " << filename << " width: " << x << " height: " << y << " comps: " << n << endl;
+        
+        this->width = x;
+        this->height = y;
+        this->gluid = 0;
+        this->index = ind;
+        this->mipmap = mipmap;
     }
     
     // for framebuffer
@@ -91,12 +101,13 @@ namespace tessterrain {
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, magFilter);
         
         glActiveTexture(GL_TEXTURE0);
+        initialized = true;
     }
     
     
     Texture::~Texture() {
-	//glActiveTexture(glunit);
-	if(gluid)
+        //glActiveTexture(glunit);
+        if(gluid)
             glDeleteTextures(1, &gluid);
     }
     
@@ -131,11 +142,11 @@ namespace tessterrain {
 
     void Texture::reloadData(const char* filename, bool mipmap) {
 
-	int x,y,n;
+        int x,y,n;
         unsigned char *data = stbi_load(filename, &x, &y, &n, 0);
         
         if(!data) {
-            cout << "Failed to load texture"  << endl;
+            cout << "Failed to load texture "  << filename << endl;
             exit(0);
         }
         

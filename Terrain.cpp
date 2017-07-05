@@ -20,10 +20,13 @@ namespace tessterrain {
     /**
      Tessellation Terrain
      */
-    TessTerrain::TessTerrain(): m_material(0), m_initialized(false), m_texHightmap(0), m_texture(0),
+    TessTerrain::TessTerrain(TerrainInfo info, glm::vec3 globalHeightRange): m_material(0), m_initialized(false),
+    m_texHightmap(0), m_texture(0),
     m_vbo(0), m_vao(0),  m_displayMode(0), m_overlay(0), m_overlayAlpha(0.5), 
-    m_fog(false), m_reload(false), m_circleVao(0), m_circleMaterial(0), m_circleVao2(0)
+    m_fog(false), m_reload(false), m_circleVao(0), m_circleMaterial(0), m_circleVao2(0), m_loadState(STATE_NONE)
     {
+        m_info = info;
+        m_globalHeightRange = globalHeightRange;
         
         m_displayModeNames.push_back("shadeSimpleWireFrame");
         m_displayModeNames.push_back("shadeWorldHeight");
@@ -33,7 +36,9 @@ namespace tessterrain {
         m_displayModeNames.push_back("shadeTextured");
         m_displayModeNames.push_back("shadeTexturedAndLit");
         m_displayModeNames.push_back("shadeTexturedAndOverlay");
-	m_displayModeNames.push_back("shadeTexturedAndOverlayAndLit");
+        m_displayModeNames.push_back("shadeTexturedAndOverlayAndLit");
+        
+        init();
     }
     
     TessTerrain::~TessTerrain() {
@@ -59,54 +64,16 @@ namespace tessterrain {
 #endif
     }
     
-    void TessTerrain::init(string configfile) {
-        cout << "Config file: " << configfile << endl;
+    void TessTerrain::init() {
         
-        INIReader reader(configfile);
-        string str = reader.Get("file", "heightmap", "");
-        if(str.length() == 0) {
-            cout << "ERROR: no highmap" << endl;
-            exit(1);
-        }
-        m_files.push_back(str);
+        m_heightRangeScale = m_globalHeightRange[2];
         
-        str = reader.Get("file", "texture", "");
-        if(str.length() > 0)
-            m_files.push_back(str);
+        m_verticalScale = glm::vec2(m_globalHeightRange[0], m_globalHeightRange[1]-m_globalHeightRange[0]);
+        m_verticalScale = m_heightRangeScale * m_verticalScale;
         
-        str = reader.Get("file", "overlay", "");
-        if(str.length() > 0)
-            m_files.push_back(str);
+        m_heightRange = m_heightRangeScale * glm::vec2(m_info.heightRange[0], m_info.heightRange[1] - m_info.heightRange[0]);
         
-        m_horizontalRes = glm::vec2(reader.GetReal("horizontalres", "wres", 1), reader.GetReal("horizontalres", "hres", 1));
-        
-        m_heightRangeOri = glm::vec2(reader.GetReal("heightrange", "min", 0), reader.GetReal("heightrange", "max", 1));
-        m_heightRangeScale = reader.GetReal("heightrange", "scale", 1);
-        
-        float vscalemin, vscalemax;
-        vscalemin = reader.GetReal("globalheightrange", "min", -1);
-        vscalemax = reader.GetReal("globalheightrange", "max", -1);
-        if(vscalemin == -1 || vscalemax == -1)
-            m_verticalScaleOri = glm::vec2(m_heightRange[0], m_heightRange[1]-m_heightRange[0]);
-        else
-            m_verticalScaleOri = glm::vec2(vscalemin, vscalemax - vscalemin);
-        
-        m_heightRange = m_heightRangeScale * m_heightRangeOri;
-        m_verticalScale = m_heightRangeScale * m_verticalScaleOri;
-        
-        float x, y, z;
-        x = reader.GetReal("moveto", "x", 0);
-        y = reader.GetReal("moveto", "y", 0);
-        z = reader.GetReal("moveto", "z", 0);
-        moveTo(x, y, z);
-    }
-    
-    void TessTerrain::printInfo() {
-        
-        for (int i=0; i < m_files.size(); i++)
-            cout << "file: " << m_files[i] << endl;
-        cout << "wres: " << m_horizontalRes[0] << " hres: " << m_horizontalRes[1] << endl;
-        cout << "h min: " << m_heightRange[0] << " h max: " << m_heightRange[1] << endl;
+        moveTo(glm::vec3(m_info.offset[0], 0, m_info.offset[1]));
     }
     
     void TessTerrain::nextDisplayMode(bool forward) {
@@ -122,10 +89,10 @@ namespace tessterrain {
                 m_displayMode = DisplayModeCount - 1;
         }
         
-        if(m_files.size() < 2 && (m_displayMode == Textured || m_displayMode == TexturedAndLit) )
+        if(m_info.texture == "" && (m_displayMode == Textured || m_displayMode == TexturedAndLit) )
             nextDisplayMode(forward);
         
-        if(m_files.size() < 3 && (m_displayMode == TexturedAndOverlay || m_displayMode == TexturedAndOverlayAndLit) )
+        if(m_info.overlay == "" && (m_displayMode == TexturedAndOverlay || m_displayMode == TexturedAndOverlayAndLit) )
             nextDisplayMode(forward);
         
         if (m_displayMode == WorldNormals || m_displayMode == LightingFactor)
@@ -154,13 +121,63 @@ namespace tessterrain {
     }
     
     void TessTerrain::setHeightScale(float scale) {
-        m_heightRange = scale * m_heightRangeOri;
-        m_verticalScale = scale * m_verticalScaleOri;
+        m_verticalScale = scale * glm::vec2(m_globalHeightRange[0], m_globalHeightRange[1]-m_globalHeightRange[0]);
+        m_heightRange = scale * glm::vec2(m_info.heightRange[0], m_info.heightRange[1] - m_info.heightRange[0]);
     }
     
     void TessTerrain::reloadOverlay() {
-	if(m_files.size() > 2 && m_overlay)
+	if(m_info.overlay != "" && m_overlay)
 	    m_reload = true;
+    }
+    
+    void TessTerrain::print() {
+        cout << endl << "======= " << m_info.name << " =====" << endl;
+        cout << "terrain: " << m_info.terrain << endl;
+        cout << "texture: " << m_info.texture << endl;
+        cout << "overlay: " << m_info.overlay << endl;
+        cout << "offset: " << m_info.offset[0] << " " << m_info.offset[1] << endl;
+        cout << "heightRange: " << m_info.heightRange[0] << " " << m_info.heightRange[1] << endl;
+        cout << "globalHeightRange: " << m_globalHeightRange[0] << " " << m_globalHeightRange[1] << endl;
+        cout << "bbox: ";
+        for (int j=0; j < 6; j++)
+            cout << m_info.bbox[j] << " ";
+        cout << endl;
+        cout << "this heightRange: " << m_heightRange[0] << " " << m_heightRange[1] << endl;
+        cout << "this verticalScale: " << m_verticalScale[0] << " " << m_verticalScale[1] << endl;
+    }
+    
+    void TessTerrain::loadTextures() {
+        
+        if (m_loadState == STATE_LOADED)
+            return;
+        
+        // textures
+        m_texHightmap = new Texture(m_info.terrain.c_str(), 0, false);
+        if(m_info.texture != "")
+            m_texture = new Texture(m_info.texture.c_str(), 1, true);
+        if(m_info.overlay != "")
+            m_overlay = new Texture(m_info.overlay.c_str(), 2, true);
+        
+        m_loadState = STATE_LOADED;
+        // cout << m_info.name << " loadtextures with state " << m_loadState << endl;
+    }
+    
+    void TessTerrain::unloadTextures() {
+        cout << m_info.name << " unloadTextures" << endl;
+        m_loadState = STATE_DELETING;
+        if(m_texHightmap) {
+            delete m_texHightmap;
+            m_texHightmap = NULL;
+        }
+        if(m_texture) {
+            delete m_texture;
+            m_texture = NULL;
+        }
+        if(m_overlay) {
+            delete m_overlay;
+            m_texture = NULL;
+        }
+        m_loadState = STATE_NONE;
     }
     
     void TessTerrain::setup(){
@@ -171,84 +188,91 @@ namespace tessterrain {
         if(!m_circleMaterial)
             m_circleMaterial = new SSMaterial();
         
-        // textures
-        m_texHightmap = new Texture(m_files[0].c_str(), 0, false);
-        if(m_files.size() > 1)
-            m_texture = new Texture(m_files[1].c_str(), 1, true);
-        if(m_files.size() > 2)
-            m_overlay = new Texture(m_files[2].c_str(), 2, true);
+        // print();
         
+        if (m_loadState != STATE_LOADED)
+            return;
+        
+        if(m_texHightmap)
+            m_texHightmap->initTexture();
+        
+        if(m_texture)
+            m_texture->initTexture();
+        
+        if(m_overlay)
+            m_overlay->initTexture();
+    
         // patches
-        const int maxTessellationLevel = 64;
-        const int trianglesPerHeightSample = 1;
-        const int xDivisions = trianglesPerHeightSample * m_texHightmap->getWidth() / maxTessellationLevel;
-        const int zDivisions = trianglesPerHeightSample * m_texHightmap->getHeight() / maxTessellationLevel;
-        //cout << "xDivisions = " << xDivisions << " zDivisions = " << zDivisions << endl;
-        m_patchCount = xDivisions * zDivisions;
-        vector<float> positionData( 2 * m_patchCount ); // 2 floats per vertex
-        //cout << "Total number of patches = " << m_patchCount << endl;
-        
-        const float dx = 1.0f / static_cast<float>( xDivisions );
-        const float dz = 1.0f / static_cast<float>( zDivisions );
-        
-        for ( int j = 0; j < 2 * zDivisions; j += 2 ) {
-            float z = static_cast<float>( j ) * dz * 0.5;
-            for ( int i = 0; i < 2 * xDivisions; i += 2 ) {
-                float x = static_cast<float>( i ) * dx * 0.5;
-                const int index = xDivisions * j + i;
-                positionData[index]     = x;
-                positionData[index + 1] = z;
+        if (m_vao == 0) {
+            const int maxTessellationLevel = 64;
+            const int trianglesPerHeightSample = 1;
+            const int xDivisions = trianglesPerHeightSample * m_texHightmap->getWidth() / maxTessellationLevel;
+            const int zDivisions = trianglesPerHeightSample * m_texHightmap->getHeight() / maxTessellationLevel;
+            //cout << "xDivisions = " << xDivisions << " zDivisions = " << zDivisions << endl;
+            m_patchCount = xDivisions * zDivisions;
+            vector<float> positionData( 2 * m_patchCount ); // 2 floats per vertex
+            //cout << "Total number of patches = " << m_patchCount << endl;
+            
+            const float dx = 1.0f / static_cast<float>( xDivisions );
+            const float dz = 1.0f / static_cast<float>( zDivisions );
+            
+            for ( int j = 0; j < 2 * zDivisions; j += 2 ) {
+                float z = static_cast<float>( j ) * dz * 0.5;
+                for ( int i = 0; i < 2 * xDivisions; i += 2 ) {
+                    float x = static_cast<float>( i ) * dx * 0.5;
+                    const int index = xDivisions * j + i;
+                    positionData[index]     = x;
+                    positionData[index + 1] = z;
+                }
             }
+            
+            glGenVertexArrays(1, &m_vao);
+            glBindVertexArray(m_vao);
+            
+            glGenBuffers(1, &m_vbo);
+            glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
+            glBufferData(GL_ARRAY_BUFFER, positionData.size() * sizeof( float ), &positionData[0], GL_STATIC_DRAW);
+            
+            GLSLProgram* shader = m_material->getShader();
+            //shader->bind();
+            unsigned int val = glGetAttribLocation(shader->getHandle(), "vertexPosition");
+            glEnableVertexAttribArray(val);
+            glVertexAttribPointer(val, 2, GL_FLOAT, GL_FALSE, 2*sizeof(float), (const GLvoid*)0);
+            
+            glBindVertexArray(0);
+            
+            // Get subroutine indices
+            for ( int i = 0; i < DisplayModeCount; ++i){
+                m_displayModeSubroutines.push_back( glGetSubroutineIndex( shader->getHandle(), GL_FRAGMENT_SHADER, m_displayModeNames[i].c_str()) );
+            }
+            
+            // cal values
+            m_horizontalScale = glm::vec2(m_info.res[1] * m_texHightmap->getWidth(), m_info.res[0] * m_texHightmap->getHeight());
+            if(m_horizontalScale[1] < 0)
+                m_horizontalScale[1] *= -1;
+            
+            m_fogRange = glm::vec2(50, m_horizontalScale[0] < m_horizontalScale[1] ? m_horizontalScale[0] : m_horizontalScale[1]);
+            m_fogRange[1] *= 2.0;
         }
-        
-        glGenVertexArrays(1, &m_vao);
-        glBindVertexArray(m_vao);
-        
-        glGenBuffers(1, &m_vbo);
-        glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
-        glBufferData(GL_ARRAY_BUFFER, positionData.size() * sizeof( float ), &positionData[0], GL_STATIC_DRAW);
-        
-        GLSLProgram* shader = m_material->getShader();
-        //shader->bind();
-        unsigned int val = glGetAttribLocation(shader->getHandle(), "vertexPosition");
-        glEnableVertexAttribArray(val);
-        glVertexAttribPointer(val, 2, GL_FLOAT, GL_FALSE, 2*sizeof(float), (const GLvoid*)0);
-        
-        glBindVertexArray(0);
-        
-        // Get subroutine indices
-        for ( int i = 0; i < DisplayModeCount; ++i){
-            m_displayModeSubroutines.push_back( glGetSubroutineIndex( shader->getHandle(), GL_FRAGMENT_SHADER, m_displayModeNames[i].c_str()) );
-        }
-        
-        // cal values
-        m_horizontalScale = glm::vec2(m_horizontalRes[0] * m_texHightmap->getWidth(), m_horizontalRes[1] * m_texHightmap->getHeight());
-        if(m_horizontalScale[1] < 0)
-            m_horizontalScale[1] *= -1;
-        
-        m_fogRange = glm::vec2(50, m_horizontalScale[0] < m_horizontalScale[1] ? m_horizontalScale[0] : m_horizontalScale[1]);
-        m_fogRange[1] *= 2.0;
-        
-        //cout << "horizontal scale: " << m_horizontalScale[0] << " " << m_horizontalScale[1] << endl;
-        //cout << "vertical scale: " << m_verticalScale[0] << " " << m_verticalScale[1] << endl;
-        //cout << "fog range: " <<m_fogRange[0] << " " << m_fogRange[1] << endl;
-        
-        m_initialized = true;
+    
     }
     
     void TessTerrain::render(const float MV[16], const float P[16]) {
         
-        if(!m_initialized)
-            setup();
-
+        if (m_loadState != STATE_LOADED)
+            return;
+        
+        setup();
+        
         if(m_reload) {
-            m_overlay->reloadData(m_files[2].c_str(), true);
+            m_overlay->reloadData(m_info.overlay.c_str(), true);
             m_reload = false;
         }
-
+        
         GLSLProgram* shader = m_material->getShader();
         shader->bind();
-        m_texHightmap->bind();
+        if(m_texHightmap)
+            m_texHightmap->bind();
         
         glUniformSubroutinesuiv( GL_FRAGMENT_SHADER, 1, &m_displayModeSubroutines[m_displayMode] );
         
@@ -338,8 +362,8 @@ namespace tessterrain {
     
     void TessTerrain::renderWithZoom(const float MV[16], const float P[16], const float PZoom[16]) {
         
-        if(!m_initialized)
-            setup();
+        if(m_loadState != STATE_LOADED)
+            return;
         
         int x = m_viewportSize[0]/2;
         int y = m_viewportSize[1]/2;
@@ -366,7 +390,6 @@ namespace tessterrain {
         glStencilFunc( GL_EQUAL, 1, ~0 );
         glDepthMask(GL_TRUE);
         glStencilOp( GL_KEEP, GL_KEEP, GL_KEEP );
-        
         
         render(MV, PZoom);
         

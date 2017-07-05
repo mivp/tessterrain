@@ -20,6 +20,8 @@ namespace tessterrain {
         Texture(unsigned int _index, unsigned int _width, unsigned int _height, unsigned int _format=GL_RGBA, unsigned int _globalFormat=GL_RGBA);
         ~Texture();
         
+        void initTexture();
+        
         void bind();
         void unbind();
         int getWidth();
@@ -51,6 +53,11 @@ namespace tessterrain {
         unsigned int magFilter;
         unsigned int format;
         unsigned int globalFormat;
+        
+        bool initialized;
+        unsigned char* data;
+        int numChannel;
+        bool mipmap;
     };
     
 }; //namespace tessterrain

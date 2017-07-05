@@ -19,12 +19,19 @@ add_definitions(-DOMEGALIB_MODULE)
 # Set module name and source files here
 add_library(${MODULE_NAME} MODULE 
 		INIReader.h
+		LRU.h
+		LRU.cpp
+		Thread.h
+		Thread.cpp
+		wqueue.h
 		Program.h
 		Program.cpp
 		Material.h
 		Material.cpp
 		Terrain.h
 		Terrain.cpp
+		TerrainManager.h
+		TerrainManager.cpp
 		Texture.h
 		Texture.cpp
 		tessterrain.cpp 

@@ -59,7 +59,7 @@ namespace tessterrain {
         ~Mesh();
         
         void moveTo(glm::vec3 pos);
-        void render(Camera* cam);
+        void render(const float MV[16], const float P[16]);
     };
     
     /**

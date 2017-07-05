@@ -53,8 +53,11 @@ SET( srcs
 		../Program.cpp
 		../Material.cpp
 		../Terrain.cpp
+		../TerrainManager.cpp
 		../Texture.cpp
 		../Mesh.cpp
+		../Thread.cpp
+		../LRU.cpp
 		Camera.cpp
 		main.cpp 
 		)
@@ -66,9 +69,13 @@ SET( headers
 		../Program.h
 		../Material.h
 		../Terrain.h
+		../TerrainManager.h
 		../Texture.h
 		../stb_image.h
 		../Mesh.h
+		../Thread.h
+		../wqueue.h
+		../LRU.h
 		Camera.h
 		)
 

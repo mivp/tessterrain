@@ -87,7 +87,7 @@ namespace tessterrain {
         m_modelMatrix = glm::translate(m_modelMatrix, pos);
     }
     
-    void Mesh::render(Camera* cam) {
+    void Mesh::render(const float MV[16], const float P[16]) {
         
         if(!m_vao)
             setup();
@@ -96,8 +96,10 @@ namespace tessterrain {
         
         GLSLProgram* shader = m_material->getShader();
         shader->bind();
-        glm::mat4 viewMatrix = cam->view;
-        glm::mat4 projMatrix = cam->projection;
+        //glm::mat4 viewMatrix = cam->view;
+        //glm::mat4 projMatrix = cam->projection;
+        glm::mat4 viewMatrix = glm::make_mat4(MV);
+        glm::mat4 projMatrix = glm::make_mat4(P);
         glm::mat4 modelViewMatrix = viewMatrix * m_modelMatrix;
         glm::mat3 normalMatrix = glm::inverseTranspose(glm::mat3(modelViewMatrix));
         glm::mat4 mvp = projMatrix * modelViewMatrix;

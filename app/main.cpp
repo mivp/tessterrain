@@ -1,7 +1,6 @@
 #include "GLInclude.h"
 #include "GLUtils.h"
-#include "../Terrain.h"
-#include "../Material.h"
+#include "../TerrainManager.h"
 #include "Mesh.h"
 #include "Camera.h"
 
@@ -26,7 +25,7 @@ float dt = 0;
 #define WIDTH 1024
 #define HEIGHT 768
 
-vector<TessTerrain*> tessTerrains;
+TerrainManager* terrains;
 vector<Mesh*> objects;
 
 Camera* camera = NULL;
@@ -99,14 +98,9 @@ void init_resources(vector<string> inifiles) {
     camera->Update();
     
     // terrains
-    for (int i=0; i < inifiles.size(); i++) {
-        TessTerrain* tessTerrain = new TessTerrain();
-        tessTerrain->init(inifiles[i]);
-        tessTerrain->printInfo();
-        tessTerrain->calViewportMatrix(WIDTH, HEIGHT);
-        tessTerrain->setHeightScale(0.4);
-        tessTerrains.push_back(tessTerrain);
-    }
+    terrains = new TerrainManager("testdata/vic_usgs/vic_config.ini");
+    terrains->calViewportMatrix(WIDTH, HEIGHT);
+    terrains->setHeightScale(0.4);
     
     // create a sample object at origin
     Mesh* m = MeshUtils::sphere(200, 10, 10);
@@ -116,9 +110,8 @@ void init_resources(vector<string> inifiles) {
 
 void free_resources()
 {
-    for(int i=0; i < tessTerrains.size(); i++)
-        delete tessTerrains[i];
-    tessTerrains.clear();
+    delete terrains;
+    
     if(camera)
         delete camera;
     for(int i = 0; i < objects.size(); i++)
@@ -150,27 +143,23 @@ void doMovement() {
     }
     
     if(keys[GLFW_KEY_T]) {
-        for(int i=0; i < tessTerrains.size(); i++)
-            tessTerrains[i]->toggleFog();
+        terrains->toggleFog();
         keys[GLFW_KEY_T] = false;
     }
     if(keys[GLFW_KEY_N]) {
-        for(int i=0; i < tessTerrains.size(); i++)
-            tessTerrains[i]->nextDisplayMode(1);
+        terrains->nextDisplayMode(1);
         keys[GLFW_KEY_N] = false;
     }
     if(keys[GLFW_KEY_O]) {
-        float alpha = tessTerrains[0]->getOverlayAlpha();
+        float alpha = terrains->getOverlayAlpha();
         alpha += 0.05;
         if(alpha > 1.0)
-            alpha = 0.5;
-        for(int i=0; i < tessTerrains.size(); i++)
-            tessTerrains[i]->setOverlayAlpha(alpha);
+           alpha = 0.5;
+        terrains->setOverlayAlpha(alpha);
         keys[GLFW_KEY_O] = false;
     }
     if(keys[GLFW_KEY_R]) {
-        for(int i=0; i < tessTerrains.size(); i++)
-            tessTerrains[i]->reloadOverlay();
+        terrains->reloadOverlay();
         keys[GLFW_KEY_R] = false;
     }
     camera->Update();
@@ -197,20 +186,22 @@ void mainLoop()
         //glClearColor(1.0f,0.5f,0.5f,1.0f);
     
         // render terrain
-        float* MV, *P, *PZoom;
+        float *MV, *P, *MVP, *PZoom;
         MV = (float*)glm::value_ptr(camera->MV);
         P = (float*)glm::value_ptr(camera->projection);
+        MVP = (float*)glm::value_ptr(camera->MVP);
+        
         PZoom = (float*)glm::value_ptr(camera->projectionZoom);
         
-        for(int i=0; i < tessTerrains.size(); i++) {
-            //tessTerrains[i]->render(MV, P);
-            tessTerrains[i]->renderWithZoom(MV, P, PZoom);
-        }
+        float campos[3] = {camera->camera_position[0], camera->camera_position[1], camera->camera_position[2]};
+        terrains->updateVisibility(MVP, campos);
+        terrains->render(MV, P);
+        //terrains->renderWithZoom(MV, P, PZoom);
         
         // render objects
         for(int i = 0; i < objects.size(); i++)
             if(objects[i])
-                objects[i]->render(camera);
+                objects[i]->render(MV, P);
 
         glfwSwapBuffers(window);
 
