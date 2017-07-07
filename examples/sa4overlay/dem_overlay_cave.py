@@ -28,24 +28,11 @@ overlay_alpha_min = 0.2
 overlay_alpha_max = 1
 overlay_alpha_value = 0.6
 
-terrains = (
-    "s35_e141", "s35_e142",
-    "s36_e141", "s36_e142", "s36_e143", "s36_e144", "s36_e145", "s36_e146", "s36_e147",
-    "s37_e141", "s37_e142", "s37_e143", "s37_e144", "s37_e145", "s37_e146", "s37_e147", "s37_e148",
-    "s38_e141", "s38_e142", "s38_e143", "s38_e144", "s38_e145", "s38_e146", "s38_e147", "s38_e148", "s38_e149",
-    "s39_e141", "s39_e142", "s39_e143", "s39_e144", "s39_e145", "s39_e146", "s39_e147"
-    )
-
-print 'terrains:', terrains
-
-overlay_dir = '/home/toand/git/projects/tessterrain/testdata/vic_usgs/overlay/'
+overlay_dir = '/home/toand/git/projects/tessterrain/terraindata/overlay/sa4/'
 
 # INIT TERRAIN
 tt = tessterrain.initialize()
-for i in range(len(terrains)):
-    filename = 'config/' + terrains[i] + '_1arc_v3.ini'
-    print filename
-    tt.addTerrain(filename)
+tt.initTerrain('vic_config.ini')
 
 # go colormap mode
 tt.setHeightScale(1.0 * data_height_scale);

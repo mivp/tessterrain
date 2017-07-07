@@ -361,8 +361,8 @@ namespace tessterrain {
             if(!t->inQueue() && t->canAddToQueue() ) {
                 t->setState(STATE_INQUEUE);
                 m_terrainQueue.add(t);
-                cout << "add " << t->getName() << " to queue with state: " << t->getState() << endl;
-                cout << "lru size: " << m_lruCache->size() << endl;
+                //cout << "add " << t->getName() << " to queue with state: " << t->getState() << endl;
+                //cout << "lru size: " << m_lruCache->size() << endl;
             }
             
             m_displayList.push_back(t);
@@ -370,7 +370,7 @@ namespace tessterrain {
         }
         if (m_numVisibleTerrain != m_displayList.size()) {
             m_numVisibleTerrain = m_displayList.size();
-            cout << "# visible terrains: " << m_numVisibleTerrain << endl;
+            //cout << "# visible terrains: " << m_numVisibleTerrain << endl;
         }
         return 0;
     }
