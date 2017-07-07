@@ -170,9 +170,9 @@ namespace tessterrain {
             
             info.overlay = "";
             if (reader.GetInteger("general", "overlay", 0) > 0) {
-                info.texture = m_overlayDir;
-                info.texture.append("/");
-                info.texture.append(strReplace( overlayFile, "%s", info.name));
+                info.overlay = m_overlayDir;
+                info.overlay.append("/");
+                info.overlay.append(strReplace( overlayFile, "%s", info.name));
             }
             
             // res

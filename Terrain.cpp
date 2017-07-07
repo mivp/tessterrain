@@ -126,8 +126,8 @@ namespace tessterrain {
     }
     
     void TessTerrain::reloadOverlay() {
-	if(m_info.overlay != "" && m_overlay)
-	    m_reload = true;
+        if(m_info.overlay != "" && m_overlay)
+            m_reload = true;
     }
     
     void TessTerrain::print() {
