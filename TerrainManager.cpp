@@ -113,10 +113,42 @@ namespace tessterrain {
             V[i][3] /= k;
         }
     }
-
+    
+    // =============== TexturePool ===============
+    TexturePool::TexturePool(int num, bool texture, bool overlay) {
+        m_pool.resize(num);
+        for (int i=0; i < num; i++) {
+            m_pool[i] = new TerrainTexture(i);
+            m_pool[i]->inUsed = false;
+            m_pool[i]->heightmap = new Texture(3648, 3648, 1, 0);
+            if(texture)
+                m_pool[i]->texture = new Texture(1600, 1600, 3, 1);
+            if(overlay)
+                m_pool[i]->overlay = new Texture(512, 512, 4, 2);
+        }
+    }
+    
+    TexturePool::~TexturePool() {
+        for (int i=0; i < m_pool.size(); i++) {
+            delete m_pool[i];
+        }
+        m_pool.clear();
+    }
+    
+    TerrainTexture* TexturePool::findUnused() {
+        for (int i=0; i < m_pool.size(); i++) {
+            if (m_pool[i]->inUsed == false)
+                return m_pool[i];
+        }
+        cout << "WARNING: texture pool is full!" << endl;
+        //exit(0);
+        return NULL;
+    }
+    
+    
     
     // =============== TerrainManager ===============
-    TerrainManager::TerrainManager(string inifile): m_numVisibleTerrain(0), m_lruCache(0) {
+    TerrainManager::TerrainManager(string inifile): m_numVisibleTerrain(0), m_lruCache(0), m_prevCamPos(glm::vec3(0)) {
         cout << "Config file: " << inifile << endl;
         
         INIReader reader(inifile);
@@ -233,7 +265,10 @@ namespace tessterrain {
         
         // LRUCache
         if (!m_lruCache)
-            m_lruCache = new LRUCache(m_maxTerrainInMem, 2);
+            m_lruCache = new LRUCache(m_maxTerrainInMem, 3);
+        
+        // texture pool
+        m_texturePool = new TexturePool(m_maxTerrainInMem + 5, m_terrainsInfo[0].texture != "", m_terrainsInfo[0].overlay != "");
     }
     
     TerrainManager::~TerrainManager() {
@@ -341,12 +376,29 @@ namespace tessterrain {
     }
 
     
+    struct {
+        bool operator()(const TessTerrain* a, const TessTerrain* b) const
+        {
+            return a->getDistanceToCam() < b->getDistanceToCam();
+        }
+    } customLess;
+    
     // update list of visible terrain
     int TerrainManager::updateVisibility(const float MVP[16], const float campos[3]) {
         m_displayList.clear();
         
         float V[6][4];
         Utils::getFrustum(V, MVP);
+        
+        glm::vec3 curCamPos = glm::vec3(campos[0], campos[1], campos[2]);
+        if (glm::length(m_prevCamPos - curCamPos) > 3000) {
+            for(int i=0; i < m_terrains.size(); i++)
+                m_terrains[i]->updateDistanceToCam(curCamPos);
+            
+            std::sort(m_terrains.begin(), m_terrains.end(), customLess);
+            m_prevCamPos = curCamPos;
+            //cout << "resorted" << endl;
+        }
         
         for(int i=0; i < m_terrains.size(); i++) {
             TessTerrain* t = m_terrains[i];
@@ -359,14 +411,28 @@ namespace tessterrain {
                 continue;
             
             if(!t->inQueue() && t->canAddToQueue() ) {
-                t->setState(STATE_INQUEUE);
-                m_terrainQueue.add(t);
-                //cout << "add " << t->getName() << " to queue with state: " << t->getState() << endl;
-                //cout << "lru size: " << m_lruCache->size() << endl;
+                TerrainTexture* tt = m_texturePool->findUnused();
+                if(tt) {
+                    tt->inUsed = true;
+                    t->setTerrainTexture(tt);
+                    //cout << t->getName() << " with terrain texture id " << tt->id << endl;
+                    t->setState(STATE_INQUEUE);
+                    m_terrainQueue.add(t);
+                    //t->loadTextures();
+                    
+                    //cout << "t id: " << tt->id << " add " << t->getName() << " to queue with state: " << t->getState() << endl;
+                    //cout << "lru size: " << m_lruCache->size() << endl;
+                }
             }
             
             m_displayList.push_back(t);
             m_lruCache->insert(t->getName(), t);
+            
+            if (m_displayList.size() >= m_maxTerrainInMem) {
+                //cout << "WARNING: numVisible >= m_maxTerrainInMem" << endl;
+                break;
+            }
+
         }
         if (m_numVisibleTerrain != m_displayList.size()) {
             m_numVisibleTerrain = m_displayList.size();

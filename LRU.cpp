@@ -11,7 +11,7 @@ size_t LRUCache::prune() {
             m_cache.erase(n->key);
             delete n;
             count++;
-            std::cout << "LRU free data " << std::endl;
+            // std::cout << "LRU free data " << std::endl;
         }
         return count;
     } else {

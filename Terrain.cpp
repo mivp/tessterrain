@@ -21,8 +21,7 @@ namespace tessterrain {
      Tessellation Terrain
      */
     TessTerrain::TessTerrain(TerrainInfo info, glm::vec3 globalHeightRange): m_material(0), m_initialized(false),
-    m_texHightmap(0), m_texture(0),
-    m_vbo(0), m_vao(0),  m_displayMode(0), m_overlay(0), m_overlayAlpha(0.5), 
+    m_terrainTexture(0), m_vbo(0), m_vao(0),  m_displayMode(0), m_overlayAlpha(0.5), 
     m_fog(false), m_reload(false), m_circleVao(0), m_circleMaterial(0), m_circleVao2(0), m_loadState(STATE_NONE)
     {
         m_info = info;
@@ -43,12 +42,6 @@ namespace tessterrain {
     
     TessTerrain::~TessTerrain() {
 #ifndef OMEGALIB_MODULE
-        if(m_texHightmap)
-            delete m_texHightmap;
-        if(m_texture)
-            delete m_texture;
-        if(m_overlay)
-            delete m_overlay;
         if(m_vao > 0) {
             glDeleteVertexArrays(1,&m_vao);
             glDeleteBuffers(1,&m_vbo);
@@ -126,7 +119,7 @@ namespace tessterrain {
     }
     
     void TessTerrain::reloadOverlay() {
-        if(m_info.overlay != "" && m_overlay)
+        if(m_info.overlay != "" && m_terrainTexture->overlay)
             m_reload = true;
     }
     
@@ -146,37 +139,39 @@ namespace tessterrain {
         cout << "this verticalScale: " << m_verticalScale[0] << " " << m_verticalScale[1] << endl;
     }
     
+    void TessTerrain::updateDistanceToCam(glm::vec3 campos) {
+        glm::vec3 center = glm::vec3( (m_info.bbox[0] + m_info.bbox[3])/2, (m_info.bbox[1] + m_info.bbox[4])/2, (m_info.bbox[2] + m_info.bbox[5])/2 );
+        m_distToCam = glm::length(center - campos);
+    }
+    
     void TessTerrain::loadTextures() {
         
         if (m_loadState == STATE_LOADED)
             return;
         
-        // textures
-        m_texHightmap = new Texture(m_info.terrain.c_str(), 0, false);
-        if(m_info.texture != "")
-            m_texture = new Texture(m_info.texture.c_str(), 1, true);
-        if(m_info.overlay != "")
-            m_overlay = new Texture(m_info.overlay.c_str(), 2, true);
+        m_loadState = STATE_LOADING;
+        
+        if ( m_terrainTexture->heightmap )
+            m_terrainTexture->heightmap->loadData(m_info.terrain.c_str());
+        if ( m_terrainTexture->texture )
+            m_terrainTexture->texture->loadData(m_info.texture.c_str());
+        if ( m_terrainTexture->overlay )
+            m_terrainTexture->overlay->loadData(m_info.overlay.c_str());
         
         m_loadState = STATE_LOADED;
-        // cout << m_info.name << " loadtextures with state " << m_loadState << endl;
     }
     
     void TessTerrain::unloadTextures() {
-        cout << m_info.name << " unloadTextures" << endl;
-        m_loadState = STATE_DELETING;
-        if(m_texHightmap) {
-            delete m_texHightmap;
-            m_texHightmap = NULL;
+        
+        if (m_loadState != STATE_LOADED)
+            return;
+        
+        m_loadState = STATE_UNLOADING;
+        
+        if(m_terrainTexture) {
+            m_terrainTexture->inUsed = false;
         }
-        if(m_texture) {
-            delete m_texture;
-            m_texture = NULL;
-        }
-        if(m_overlay) {
-            delete m_overlay;
-            m_texture = NULL;
-        }
+        
         m_loadState = STATE_NONE;
     }
     
@@ -193,21 +188,21 @@ namespace tessterrain {
         if (m_loadState != STATE_LOADED)
             return;
         
-        if(m_texHightmap)
-            m_texHightmap->initTexture();
+        if(m_terrainTexture->heightmap)
+            m_terrainTexture->heightmap->initTexture();
         
-        if(m_texture)
-            m_texture->initTexture();
+        if(m_terrainTexture->texture)
+            m_terrainTexture->texture->initTexture();
         
-        if(m_overlay)
-            m_overlay->initTexture();
+        if(m_terrainTexture->overlay)
+            m_terrainTexture->overlay->initTexture();
     
         // patches
         if (m_vao == 0) {
             const int maxTessellationLevel = 64;
             const int trianglesPerHeightSample = 1;
-            const int xDivisions = trianglesPerHeightSample * m_texHightmap->getWidth() / maxTessellationLevel;
-            const int zDivisions = trianglesPerHeightSample * m_texHightmap->getHeight() / maxTessellationLevel;
+            const int xDivisions = trianglesPerHeightSample * m_terrainTexture->heightmap->getWidth() / maxTessellationLevel;
+            const int zDivisions = trianglesPerHeightSample * m_terrainTexture->heightmap->getHeight() / maxTessellationLevel;
             //cout << "xDivisions = " << xDivisions << " zDivisions = " << zDivisions << endl;
             m_patchCount = xDivisions * zDivisions;
             vector<float> positionData( 2 * m_patchCount ); // 2 floats per vertex
@@ -247,7 +242,7 @@ namespace tessterrain {
             }
             
             // cal values
-            m_horizontalScale = glm::vec2(m_info.res[1] * m_texHightmap->getWidth(), m_info.res[0] * m_texHightmap->getHeight());
+            m_horizontalScale = glm::vec2(m_info.res[1] * m_terrainTexture->heightmap->getWidth(), m_info.res[0] * m_terrainTexture->heightmap->getHeight());
             if(m_horizontalScale[1] < 0)
                 m_horizontalScale[1] *= -1;
             
@@ -265,27 +260,33 @@ namespace tessterrain {
         setup();
         
         if(m_reload) {
-            m_overlay->reloadData(m_info.overlay.c_str(), true);
+            m_terrainTexture->overlay->reloadData(m_info.overlay.c_str(), true);
             m_reload = false;
         }
         
         GLSLProgram* shader = m_material->getShader();
         shader->bind();
-        if(m_texHightmap)
-            m_texHightmap->bind();
         
         glUniformSubroutinesuiv( GL_FRAGMENT_SHADER, 1, &m_displayModeSubroutines[m_displayMode] );
         
         //texture
-        shader->setUniform( "heightMap", (int) m_texHightmap->index );
-        if(m_texture) {
-            m_texture->bind();
-            shader->setUniform( "tex0", (int) m_texture->index );
+        if(m_terrainTexture->heightmap) {
+            m_terrainTexture->heightmap->bind();
+            shader->setUniform( "heightMap", (int) m_terrainTexture->heightmap->index );
         }
         
-        if(m_overlay) {
-            m_overlay->bind();
-            shader->setUniform( "tex1", (int) m_overlay->index );
+        if(m_terrainTexture->texture) {
+            //if (m_terrainTexture->texture->filename.find(m_info.name) == std::string::npos ) {
+            //    cout << "[render]: " << m_terrainTexture->texture->filename << " " << m_info.name << " state: " << m_loadState << endl;
+            //    exit(0);
+            //}
+            m_terrainTexture->texture->bind();
+            shader->setUniform( "tex0", (int) m_terrainTexture->texture->index );
+        }
+        
+        if(m_terrainTexture->overlay) {
+            m_terrainTexture->overlay->bind();
+            shader->setUniform( "tex1", (int) m_terrainTexture->overlay->index );
             shader->setUniform( "overlayAlpha", m_overlayAlpha );
         }
         

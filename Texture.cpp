@@ -4,6 +4,8 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
+#include <sys/time.h>
+
 using namespace std;
 
 namespace tessterrain {
@@ -12,58 +14,89 @@ namespace tessterrain {
     const unsigned int Texture::NEAREST = GL_NEAREST;
     const unsigned int Texture::MIPMAP = GL_LINEAR_MIPMAP_LINEAR;
     
-    void Texture::initTexture() {
-        
-        if(initialized)
-            return;
-        
-        // cout << "initTexture" << endl;
-        
-        //init texture
-        glunit = unitFromIndex(index);
-        minFilter = GL_LINEAR;
-        magFilter = GL_LINEAR;
-        if(numChannel == 1)
-            format = globalFormat = GL_RED;
-        else if (numChannel == 3)
-            format = globalFormat = GL_RGB;
-        else
-            format = globalFormat = GL_RGBA;
-        
-        glActiveTexture(glunit);
-        glGenTextures(1, &gluid);
-        glBindTexture(GL_TEXTURE_2D, gluid);
-        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, globalFormat, GL_UNSIGNED_BYTE, data); //GL_UNSIGNED_INT_8_8_8_8_REV
-        if(mipmap)
-            glGenerateMipmap(GL_TEXTURE_2D);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER); //GL_CLAMP_TO_BORDER GL_REPEAT
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, minFilter);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, magFilter);
-        glBindTexture(GL_TEXTURE_2D, 0);
-        
-        stbi_image_free(data);
-        initialized = true;
+    unsigned int getTime() {
+        struct timeval tp;
+        gettimeofday(&tp, NULL);
+        return (tp.tv_sec * 1000 + tp.tv_usec / 1000);
     }
     
-    // for colormap
-    Texture::Texture(const char* filename, unsigned int ind, bool mipmap): initialized(false) {
-        
-        int x,y;
-        this->data = stbi_load(filename, &x, &y, &numChannel, 0);
+    void Texture::loadData(const char* filename) {
+        this->filename = filename;
+        int x,y,n;
+        unsigned int t = getTime();
+        if(initialized && this->data)
+            stbi_image_free(data);
+        this->data = stbi_load(filename, &x, &y, &n, 0);
+        //cout << "Load image " <<filename << " (n= " << n << ") time: " << getTime() - t << endl;
         
         if(!data) {
             cout << "Failed to load texture " << filename  << endl;
             exit(0);
         }
+        initialized = false;
+    }
+    
+    void Texture::initTexture() {
         
-        //cout << "img: " << filename << " width: " << x << " height: " << y << " comps: " << n << endl;
+        if(!created) {
+            //init texture
+            glunit = unitFromIndex(index);
+            minFilter = GL_LINEAR;
+            magFilter = GL_LINEAR;
+            if(numChannel == 1)
+                format = globalFormat = GL_RED;
+            else if (numChannel == 3)
+                format = globalFormat = GL_RGB;
+            else
+                format = globalFormat = GL_RGBA;
+            
+            glActiveTexture(glunit);
+            glGenTextures(1, &gluid);
+            glBindTexture(GL_TEXTURE_2D, gluid);
+            
+            glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, globalFormat, GL_UNSIGNED_BYTE, NULL);
+            
+            //cout << "init texture " << gluid << " " << width << " " << height << " " << numChannel << endl;
+            
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER); //GL_CLAMP_TO_BORDER GL_REPEAT
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, minFilter);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, magFilter);
+            glBindTexture(GL_TEXTURE_2D, 0);
+            
+            created = true;
+        }
         
-        this->width = x;
-        this->height = y;
+        // cout << "initTexture" << endl;
+        
+        if (!initialized) {
+            glActiveTexture(glunit);
+            glBindTexture(GL_TEXTURE_2D, gluid);
+            
+            //unsigned int t = getTime();
+            //glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, globalFormat, GL_UNSIGNED_BYTE, data); //GL_UNSIGNED_INT_8_8_8_8_REV
+            glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, globalFormat, GL_UNSIGNED_BYTE, data);
+            //cout << "glTexSubImage2D time: " << getTime() - t << endl;
+            //cout << "update texture " << gluid << " with data from " << this->filename << endl;
+            
+            //if(mipmap)
+            //    glGenerateMipmap(GL_TEXTURE_2D);
+            stbi_image_free(data);
+            data = NULL;
+            initialized = true;
+            glBindTexture(GL_TEXTURE_2D, 0);
+        }
+    }
+    
+    // for terrain
+    Texture::Texture(int width, int height, int numchannels, unsigned int ind): data(0), initialized(false), created(false) {
+    
+        this->numChannel = numchannels;
+        this->width = width;
+        this->height = height;
         this->gluid = 0;
         this->index = ind;
-        this->mipmap = mipmap;
+        this->mipmap = false;
     }
     
     // for framebuffer
@@ -112,8 +145,8 @@ namespace tessterrain {
     }
     
     void Texture::bind() {
-	if(!gluid)
-	    return;
+        if(!gluid)
+            return;
         glActiveTexture(glunit);
         glBindTexture(GL_TEXTURE_2D, gluid);
     }
@@ -155,10 +188,10 @@ namespace tessterrain {
         //init texture
         glActiveTexture(glunit);
         glBindTexture(GL_TEXTURE_2D, gluid);
-	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, globalFormat, GL_UNSIGNED_BYTE, data);
+        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, globalFormat, GL_UNSIGNED_BYTE, data);
         //glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, globalFormat, GL_UNSIGNED_BYTE, data); 
         
-	if(mipmap)
+        if(mipmap)
             glGenerateMipmap(GL_TEXTURE_2D);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER); //GL_CLAMP_TO_BORDER GL_REPEAT
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);

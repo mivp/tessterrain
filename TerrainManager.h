@@ -50,6 +50,21 @@ namespace tessterrain {
     };
     
     
+    class TexturePool {
+        
+    private:
+        vector<TerrainTexture* > m_pool;
+    
+    public:
+        TexturePool(int num, bool texture, bool overlay);
+        ~TexturePool();
+        TerrainTexture* findUnused();
+    };
+    
+    
+    /**
+     Terrain manager
+     */
     class TerrainManager {
     
     public:
@@ -89,12 +104,15 @@ namespace tessterrain {
         int m_numVisibleTerrain;
         
         // loader threads
+        TexturePool* m_texturePool;
         int m_maxTerrainInMem;
         wqueue<TessTerrain*>  m_terrainQueue;
         std::list<TerrainLoaderThread*> m_terrainLoaderThreads;
         int m_numLoaderThreads;
         // cache
         LRUCache* m_lruCache;
+        //
+        glm::vec3 m_prevCamPos;
     };
     
 }; // namespace tessterrain

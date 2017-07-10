@@ -32,8 +32,25 @@ namespace tessterrain {
         STATE_NONE = 0,
         STATE_INQUEUE,
         STATE_LOADING,
-        STATE_DELETING,
+        STATE_UNLOADING,
         STATE_LOADED
+    };
+    
+    /**
+     Texture pool - to avoid recreating textures
+     */
+    struct TerrainTexture {
+        int id;
+        bool inUsed;
+        Texture* heightmap;
+        Texture* texture;
+        Texture* overlay;
+        TerrainTexture(int i): id(i), inUsed(false), heightmap(0), texture(0), overlay(0) { }
+        ~TerrainTexture() {
+            if (heightmap) delete heightmap;
+            if (texture) delete texture;
+            if (overlay) delete overlay;
+        }
     };
     
     /**
@@ -59,8 +76,8 @@ namespace tessterrain {
         glm::vec2 m_heightRange;
         glm::vec2 m_verticalScale;
         
-        //heightmap
-        Texture* m_texHightmap;
+        //texture
+        TerrainTexture* m_terrainTexture;
         
         //matrix
         glm::mat4 m_modelMatrix;
@@ -69,8 +86,6 @@ namespace tessterrain {
         
         //material
         Material* m_material;
-        Texture* m_texture;
-        Texture* m_overlay;
         float m_overlayAlpha;
         bool m_fog;
         bool m_reload;
@@ -88,6 +103,9 @@ namespace tessterrain {
         unsigned int m_circleVao2;
         Material* m_circleMaterial;
         int m_numCircle;
+        
+        //distance to camera;
+        float m_distToCam;
         
     public:
         enum DisplayMode {
@@ -119,6 +137,7 @@ namespace tessterrain {
         string getName() { return m_info.name; }
         int getState() { return m_loadState; }
         float* getBBox() { return m_info.bbox; }
+        void setTerrainTexture( TerrainTexture* tex) { m_terrainTexture = tex; }
         void loadTextures();
         void unloadTextures();
         
@@ -127,6 +146,10 @@ namespace tessterrain {
         bool canAddToQueue() { return m_loadState == STATE_NONE; }
         bool isLoading() { return m_loadState == STATE_LOADING; }
         bool isLoaded()  { return m_loadState == STATE_LOADED; }
+        
+        //
+        void updateDistanceToCam(glm::vec3 campos);
+        float getDistanceToCam() const { return m_distToCam; };
         
         //
         void calViewportMatrix(int width, int height);

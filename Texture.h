@@ -16,10 +16,11 @@ namespace tessterrain {
     class Texture
     {
     public:
-        Texture(const char* filename, unsigned int index = 0, bool mipmap = false);
+        Texture(int width, int height, int numchannels, unsigned int ind = 0);
         Texture(unsigned int _index, unsigned int _width, unsigned int _height, unsigned int _format=GL_RGBA, unsigned int _globalFormat=GL_RGBA);
         ~Texture();
         
+        void loadData(const char* filename);
         void initTexture();
         
         void bind();
@@ -27,7 +28,7 @@ namespace tessterrain {
         int getWidth();
         int getHeight();
         void resize(unsigned int _width, unsigned int _height);
-	void reloadData(const char* filename, bool mipmap = false);
+        void reloadData(const char* filename, bool mipmap = false);
         
         static void resetUnit(int textureUnitOffset = 0);
         static Texture* newFromNextUnit(unsigned int _width, unsigned int _height, unsigned int _format=GL_RGBA, unsigned int _globalFormat=GL_RGBA);
@@ -42,6 +43,8 @@ namespace tessterrain {
         static const unsigned int NEAREST;
         static const unsigned int MIPMAP;
         
+        string filename;
+        
     private:
         static unsigned int unitCount;
         static float borderColor[];
@@ -55,6 +58,7 @@ namespace tessterrain {
         unsigned int globalFormat;
         
         bool initialized;
+        bool created;
         unsigned char* data;
         int numChannel;
         bool mipmap;
