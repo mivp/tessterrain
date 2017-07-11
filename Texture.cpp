@@ -54,8 +54,9 @@ namespace tessterrain {
             glGenTextures(1, &gluid);
             glBindTexture(GL_TEXTURE_2D, gluid);
             
+            unsigned int t = getTime();
             glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, globalFormat, GL_UNSIGNED_BYTE, NULL);
-            
+            cout << "recreate texture "  << gluid << " time: " << getTime() - t << endl;
             //cout << "init texture " << gluid << " " << width << " " << height << " " << numChannel << endl;
             
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER); //GL_CLAMP_TO_BORDER GL_REPEAT
@@ -135,6 +136,15 @@ namespace tessterrain {
         
         glActiveTexture(GL_TEXTURE0);
         initialized = true;
+    }
+    
+    void Texture::freeTexture()  {
+        if(gluid)
+            glDeleteTextures(1, &gluid);
+        cout << "free texture " << gluid << endl;
+        initialized = false;
+        created = false;
+        gluid = 0;
     }
     
     

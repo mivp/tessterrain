@@ -40,12 +40,10 @@ namespace tessterrain {
      Texture pool - to avoid recreating textures
      */
     struct TerrainTexture {
-        int id;
-        bool inUsed;
         Texture* heightmap;
         Texture* texture;
         Texture* overlay;
-        TerrainTexture(int i): id(i), inUsed(false), heightmap(0), texture(0), overlay(0) { }
+        TerrainTexture(): heightmap(0), texture(0), overlay(0) { }
         ~TerrainTexture() {
             if (heightmap) delete heightmap;
             if (texture) delete texture;
@@ -137,7 +135,6 @@ namespace tessterrain {
         string getName() { return m_info.name; }
         int getState() { return m_loadState; }
         float* getBBox() { return m_info.bbox; }
-        void setTerrainTexture( TerrainTexture* tex) { m_terrainTexture = tex; }
         void loadTextures();
         void unloadTextures();
         

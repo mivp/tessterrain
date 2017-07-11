@@ -22,6 +22,7 @@ namespace tessterrain {
         
         void loadData(const char* filename);
         void initTexture();
+        void freeTexture();
         
         void bind();
         void unbind();

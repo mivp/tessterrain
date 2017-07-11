@@ -67,6 +67,14 @@ namespace tessterrain {
         m_heightRange = m_heightRangeScale * glm::vec2(m_info.heightRange[0], m_info.heightRange[1] - m_info.heightRange[0]);
         
         moveTo(glm::vec3(m_info.offset[0], 0, m_info.offset[1]));
+        
+        // texture
+        m_terrainTexture = new TerrainTexture();
+        m_terrainTexture->heightmap = new Texture(3648, 3648, 1, 0);
+        if(m_info.texture != "")
+            m_terrainTexture->texture = new Texture(1600, 1600, 3, 1);
+        if(m_info.overlay != "")
+            m_terrainTexture->overlay = new Texture(512, 512, 4, 2);
     }
     
     void TessTerrain::nextDisplayMode(bool forward) {
@@ -167,11 +175,12 @@ namespace tessterrain {
             return;
         
         m_loadState = STATE_UNLOADING;
-        
-        if(m_terrainTexture) {
-            m_terrainTexture->inUsed = false;
-        }
-        
+        m_terrainTexture->heightmap->freeTexture();
+        if(m_info.texture != "")
+            m_terrainTexture->texture->freeTexture();
+        if(m_info.overlay != "")
+            m_terrainTexture->overlay->freeTexture();
+    
         m_loadState = STATE_NONE;
     }
     

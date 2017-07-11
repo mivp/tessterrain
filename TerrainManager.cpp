@@ -114,38 +114,6 @@ namespace tessterrain {
         }
     }
     
-    // =============== TexturePool ===============
-    TexturePool::TexturePool(int num, bool texture, bool overlay) {
-        m_pool.resize(num);
-        for (int i=0; i < num; i++) {
-            m_pool[i] = new TerrainTexture(i);
-            m_pool[i]->inUsed = false;
-            m_pool[i]->heightmap = new Texture(3648, 3648, 1, 0);
-            if(texture)
-                m_pool[i]->texture = new Texture(1600, 1600, 3, 1);
-            if(overlay)
-                m_pool[i]->overlay = new Texture(512, 512, 4, 2);
-        }
-    }
-    
-    TexturePool::~TexturePool() {
-        for (int i=0; i < m_pool.size(); i++) {
-            delete m_pool[i];
-        }
-        m_pool.clear();
-    }
-    
-    TerrainTexture* TexturePool::findUnused() {
-        for (int i=0; i < m_pool.size(); i++) {
-            if (m_pool[i]->inUsed == false)
-                return m_pool[i];
-        }
-        cout << "WARNING: texture pool is full!" << endl;
-        //exit(0);
-        return NULL;
-    }
-    
-    
     
     // =============== TerrainManager ===============
     TerrainManager::TerrainManager(string inifile): m_numVisibleTerrain(0), m_lruCache(0), m_prevCamPos(glm::vec3(0)) {
@@ -167,7 +135,8 @@ namespace tessterrain {
         m_refPoint = glm::dvec2(reader.GetReal("general", "refLat", 0), reader.GetReal("general", "refLon", 0));
         
         // max number of terrains can be loaded
-        m_maxTerrainInMem = reader.GetInteger("general", "maxTerrainInMem", 20);
+        m_maxTerrainDisplay = reader.GetInteger("general", "maxTerrainDisplay", 20);
+        m_maxTerrainInMem = reader.GetInteger("general", "maxTerrainInMem", 30);
         // loader thread
         m_numLoaderThreads = reader.GetInteger("general", "numLoaderThreads", 2);
         // bbox enlarge factor
@@ -257,7 +226,7 @@ namespace tessterrain {
         // loader
         if(m_terrainLoaderThreads.size() == 0) {
             for(int i = 0; i < m_numLoaderThreads; i++) {
-                TerrainLoaderThread* t = new TerrainLoaderThread(m_terrainQueue, 10); //option->maxLoadSize);
+                TerrainLoaderThread* t = new TerrainLoaderThread(m_terrainQueue, m_maxTerrainDisplay); //option->maxLoadSize);
                 t->start();
                 m_terrainLoaderThreads.push_back(t);
             }
@@ -265,10 +234,7 @@ namespace tessterrain {
         
         // LRUCache
         if (!m_lruCache)
-            m_lruCache = new LRUCache(m_maxTerrainInMem, 3);
-        
-        // texture pool
-        m_texturePool = new TexturePool(m_maxTerrainInMem + 5, m_terrainsInfo[0].texture != "", m_terrainsInfo[0].overlay != "");
+            m_lruCache = new LRUCache(m_maxTerrainInMem, 0);
     }
     
     TerrainManager::~TerrainManager() {
@@ -411,24 +377,14 @@ namespace tessterrain {
                 continue;
             
             if(!t->inQueue() && t->canAddToQueue() ) {
-                TerrainTexture* tt = m_texturePool->findUnused();
-                if(tt) {
-                    tt->inUsed = true;
-                    t->setTerrainTexture(tt);
-                    //cout << t->getName() << " with terrain texture id " << tt->id << endl;
-                    t->setState(STATE_INQUEUE);
-                    m_terrainQueue.add(t);
-                    //t->loadTextures();
-                    
-                    //cout << "t id: " << tt->id << " add " << t->getName() << " to queue with state: " << t->getState() << endl;
-                    //cout << "lru size: " << m_lruCache->size() << endl;
-                }
+                t->setState(STATE_INQUEUE);
+                m_terrainQueue.add(t);
             }
             
             m_displayList.push_back(t);
             m_lruCache->insert(t->getName(), t);
             
-            if (m_displayList.size() >= m_maxTerrainInMem) {
+            if (m_displayList.size() >= m_maxTerrainDisplay) {
                 //cout << "WARNING: numVisible >= m_maxTerrainInMem" << endl;
                 break;
             }

@@ -105,6 +105,7 @@ namespace tessterrain {
         
         // loader threads
         TexturePool* m_texturePool;
+        int m_maxTerrainDisplay;
         int m_maxTerrainInMem;
         wqueue<TessTerrain*>  m_terrainQueue;
         std::list<TerrainLoaderThread*> m_terrainLoaderThreads;
