@@ -135,6 +135,7 @@ namespace tessterrain {
         m_refPoint = glm::dvec2(reader.GetReal("general", "refLat", 0), reader.GetReal("general", "refLon", 0));
         
         // max number of terrains can be loaded
+	m_preloadAll = reader.GetInteger("general", "preloadAll", 0);
         m_maxTerrainDisplay = reader.GetInteger("general", "maxTerrainDisplay", 20);
         m_maxTerrainInMem = reader.GetInteger("general", "maxTerrainInMem", 30);
         // loader thread
@@ -351,11 +352,25 @@ namespace tessterrain {
     
     // update list of visible terrain
     int TerrainManager::updateVisibility(const float MVP[16], const float campos[3]) {
+
+	if (m_preloadAll == 1) {
+	    for(int i=0; i < m_terrains.size(); i++) {
+		m_terrains[i]->loadTextures();
+		m_terrains[i]->initTextures();
+		m_displayList.push_back(m_terrains[i]);
+	    }
+	    m_preloadAll = -1;
+	    return 0;
+	}
+
+	if (m_preloadAll != 0)
+	   return 0;
+
         m_displayList.clear();
         
         float V[6][4];
         Utils::getFrustum(V, MVP);
-        
+
         glm::vec3 curCamPos = glm::vec3(campos[0], campos[1], campos[2]);
         if (glm::length(m_prevCamPos - curCamPos) > 3000) {
             for(int i=0; i < m_terrains.size(); i++)
@@ -365,7 +380,7 @@ namespace tessterrain {
             m_prevCamPos = curCamPos;
             //cout << "resorted" << endl;
         }
-        
+
         for(int i=0; i < m_terrains.size(); i++) {
             TessTerrain* t = m_terrains[i];
             
@@ -376,7 +391,7 @@ namespace tessterrain {
             if(!visible)
                 continue;
             
-            if(!t->inQueue() && t->canAddToQueue() ) {
+            if(t->canAddToQueue() ) {
                 t->setState(STATE_INQUEUE);
                 m_terrainQueue.add(t);
             }

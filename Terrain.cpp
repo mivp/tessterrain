@@ -168,6 +168,17 @@ namespace tessterrain {
         
         m_loadState = STATE_LOADED;
     }
+
+    void TessTerrain::initTextures() {
+	 if(m_terrainTexture->heightmap)
+            m_terrainTexture->heightmap->initTexture();
+        
+        if(m_terrainTexture->texture)
+            m_terrainTexture->texture->initTexture();
+        
+        if(m_terrainTexture->overlay)
+            m_terrainTexture->overlay->initTexture();
+    }
     
     void TessTerrain::unloadTextures() {
         
@@ -197,16 +208,9 @@ namespace tessterrain {
         if (m_loadState != STATE_LOADED)
             return;
         
-        if(m_terrainTexture->heightmap)
-            m_terrainTexture->heightmap->initTexture();
-        
-        if(m_terrainTexture->texture)
-            m_terrainTexture->texture->initTexture();
-        
-        if(m_terrainTexture->overlay)
-            m_terrainTexture->overlay->initTexture();
-    
-        // patches
+	initTextures();
+
+	// patches
         if (m_vao == 0) {
             const int maxTessellationLevel = 64;
             const int trianglesPerHeightSample = 1;

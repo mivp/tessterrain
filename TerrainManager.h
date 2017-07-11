@@ -104,6 +104,7 @@ namespace tessterrain {
         int m_numVisibleTerrain;
         
         // loader threads
+	int m_preloadAll;
         TexturePool* m_texturePool;
         int m_maxTerrainDisplay;
         int m_maxTerrainInMem;

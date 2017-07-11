@@ -136,6 +136,7 @@ namespace tessterrain {
         int getState() { return m_loadState; }
         float* getBBox() { return m_info.bbox; }
         void loadTextures();
+	void initTextures();
         void unloadTextures();
         
         void setState(LoadState state) { m_loadState = state; }
