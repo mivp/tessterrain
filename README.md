@@ -34,16 +34,15 @@ Run with python script:
 import tessterrain
 
 tt = tessterrain.initialize()
-tt.addTerrain("path/to/inifile1.ini")
-tt.addTerrain("path/to/inifile2.ini")
+tt.initTerrain('vic_config.ini')
 ```
 
 Functions which can be used in python script:
 ```
-moveTo(index, x, y, z): move a specific terrain (specified by terrain index) to a position
-nextDisplayMode(): change display mode
+nextDisplayMode(n): change display mode.
 displayInfo(): display information of terrains
 toggleFog(): toggle fog in scene
+setHeightScale(scale): set height scale for terrain
 ```
 
 ## Standalone app
@@ -65,41 +64,55 @@ Run
 
 Keys
 
-- N: go to next display mode
-- I: print out camera information
+- 'n': go to next display mode
+- 'i': print out camera information
+- 't': toggle fog
+- 'o': change overlay opacity
 
 ## Configuration file (INI)
 
 Example
 
 ```
-[file]
-; absolute path or relative path from running directory
-heightmap = testdata/tess/heightmap-1024x1024.png	; height map 8-bit png image
-texture = testdata/tess/grass.png			; (optional) texture image
+[general]
+terrains = 	s38_e141, s38_e142, s38_e143, s38_e144,
+	        s39_e141, s39_e142, s39_e143, s39_e144,
+hres = 10  ; 1 pixel ~ 10m
+wres = 10
+refLat = -36.9998611    ; topleft reference point
+refLon = 140.9998611
+;heightRangeScale = 1
+preloadAll = 0          ; preload all terrrains
+maxTerrainDisplay = 35  ; max terrains can be displayed
+maxTerrainInMem = 40    ; max terrains can be stored in VRAM
+numLoaderThreads = 4    ; number of threads to load texture images
+bboxEnlargeFactor = 1	  ; enlarged bbox size += bboxEnlargeFactor*(bbox size)/2
 
-[horizontalres]
-; (optional) the distance (e.g. metter) between 2 pixels in horizontal and 
-; vertical directions of the heightmap. Defaults to [1, 1]
-wres = 20
-hres = 20
+; elevation data
+terrainDir = terraindata/terrain
+terrainFile = %s_1arc_v3_8.png 			; %s = terrain name defined in [terrains]
 
-[heightrange]
-; (optional) min and max height of the heightmap. Defaults to [0, 1, 1]
-min = 0
-max = 200
-scale = 1
+; texture (aerial image)
+texture = 1
+textureDir = terraindata/texture
+textureFile = %s_1arc_v3_sat_crop.png
 
-[verticalscale]
-; (optional) display range. If [verticalscale] is not specified, [heightrange] will be used instead
-min = 0
-max = 220
+; overlay data
+overlay = 0
+overlayDir = terraindata/overlay/current
+overlayFile = %s.png
 
-[moveto]
-; (optional) move terain to position. Defautls to (0, 0, 0)
-x = 0
-y = 0
-z = 0
+; details
+; geo position: tl.lat, tl.lon, br.lat, br.lon
+[s35_e141]
+pos = -33.9998611, 140.9998611, -35.0001389, 142.0001389
+heightRange = 15, 144
+
+[s35_e142]
+pos = -33.9998611, 141.9998611, -35.0001389, 143.0001389
+heightRange = 3, 135
+
+...
 ```
 
 ## Heightmap
