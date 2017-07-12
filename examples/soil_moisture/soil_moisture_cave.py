@@ -16,6 +16,12 @@ hscale_min = 0.2
 hscale_max = 4
 hscale_value = data_height_scale
 
+# ovelay alpha
+overlay_alpha_min = 0.2
+overlay_alpha_max = 1
+overlay_alpha_value = 0.6
+
+
 #INIT
 # Terrain
 tt = tessterrain.initialize()
@@ -50,7 +56,12 @@ def setHeightScale(value):
     hscale_label.setText('Height scale: ' + str(val))
     hscale_value = val * data_height_scale
     tt.setHeightScale(hscale_value)
-    vf.setElevationScale(hscale_value)
+
+def setOverlayAlpha(value):
+    val = (float(value) / 100) * (overlay_alpha_max - overlay_alpha_min) + overlay_alpha_min
+    overlay_alpha_label.setText('Overlay alpha: ' + str(val))
+    tt.setOverlayAlpha(val)
+
 
 mm = MenuManager.createAndInitialize()
 menu = mm.getMainMenu()
@@ -62,7 +73,6 @@ menu.addButton("Go to camera 1",
 
 menu.addButton("Next terrain display mode", 'tt.nextDisplayMode(1)')
 menu.addButton("Toggle fog", 'tt.toggleFog()')
-menu.addButton("Next particle type", "vf.nextParticleType()")
 
 # height scale
 hscale_label = menu.addLabel("Height scale: ")
@@ -72,5 +82,13 @@ pointscale = menu.addSlider(100, "setHeightScale(%value%)")
 pointscale.getSlider().setValue(val)
 pointscale.getWidget().setWidth(200)
 setHeightScale(val)
+
+# overlay alpha
+overlay_alpha_label = menu.addLabel("Overlay alpha: ")
+val = int( float(overlay_alpha_value - overlay_alpha_min) / (overlay_alpha_max-overlay_alpha_min) * 100 )
+overlay = menu.addSlider(100, "setOverlayAlpha(%value%)")
+overlay.getSlider().setValue(val)
+overlay.getWidget().setWidth(200)
+setOverlayAlpha(val)
 
 queueCommand(":freefly")
