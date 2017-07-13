@@ -70,7 +70,7 @@ namespace tessterrain {
         
         // texture
         m_terrainTexture = new TerrainTexture();
-        m_terrainTexture->heightmap = new Texture(3648, 3648, 1, 0);
+        m_terrainTexture->heightmap = new Texture(3648, 3648, 1, 0, true);
         if(m_info.texture != "")
             m_terrainTexture->texture = new Texture(1600, 1600, 4, 1);
         if(m_info.overlay != "")
@@ -170,8 +170,8 @@ namespace tessterrain {
     }
 
     void TessTerrain::initTextures() {
-	 if(m_terrainTexture->heightmap)
-            m_terrainTexture->heightmap->initTexture();
+        if(m_terrainTexture->heightmap)
+            m_terrainTexture->heightmap->initTexture(true);
         
         if(m_terrainTexture->texture)
             m_terrainTexture->texture->initTexture();
@@ -208,9 +208,9 @@ namespace tessterrain {
         if (m_loadState != STATE_LOADED)
             return;
         
-	initTextures();
+        initTextures();
 
-	// patches
+        // patches
         if (m_vao == 0) {
             const int maxTessellationLevel = 64;
             const int trianglesPerHeightSample = 1;
@@ -286,6 +286,7 @@ namespace tessterrain {
         if(m_terrainTexture->heightmap) {
             m_terrainTexture->heightmap->bind();
             shader->setUniform( "heightMap", (int) m_terrainTexture->heightmap->index );
+            shader->setUniform( "fullTexSize", glm::vec2(m_terrainTexture->heightmap->getWidth(), m_terrainTexture->heightmap->getHeight()) );
         }
         
         if(m_terrainTexture->texture) {

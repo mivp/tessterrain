@@ -15,6 +15,7 @@ out worldVertex {
 } Out;
 
 uniform sampler2D heightMap;
+uniform vec2 fullTexSize;
 
 // The number of triangles created per height-map texel
 uniform int maxTrianglesPerTexel = 10;
@@ -37,7 +38,7 @@ const float maxTessLevel = 64.0;
 void main()
 {
     // Calculate extent of this patch in texture coords [0,1]
-    vec2 patchExtent = maxTessLevel / ( textureSize( heightMap, 0 ) * maxTrianglesPerTexel );
+    vec2 patchExtent = maxTessLevel / ( fullTexSize * maxTrianglesPerTexel );
 
     // Calculate the texture coordinates
     Out.texCoords = In[0].position.xy + gl_TessCoord.xy * patchExtent;
@@ -60,7 +61,7 @@ void main()
     // This would be a good candidate for a compute shader.
     // For deformable terrain, would need re-generating when terrain is modified
     const ivec3 offset = ivec3( -1, 0, 1 ); // Texel offsets
-    float delta = 2.0 * horizontalScale[0] / textureSize( heightMap, 0 ).x; // Horizontal displacement in world coords
+    float delta = 2.0 * horizontalScale[0] / fullTexSize.x; // Horizontal displacement in world coords
     float left   = verticalScale[0] * textureOffset( heightMap, Out.texCoords, offset.xy ).r;
     float right  = verticalScale[0] * textureOffset( heightMap, Out.texCoords, offset.zy ).r;
     float top    = verticalScale[1] * textureOffset( heightMap, Out.texCoords, offset.yz ).r;

@@ -24,19 +24,46 @@ namespace tessterrain {
         this->filename = filename;
         int x,y,n;
         //unsigned int t = getTime();
-        if(initialized && this->data)
+        if(initialized && this->data) {
             stbi_image_free(data);
+            if(multiRes && this->data_low)
+                delete []data_low;
+        }
+        //unsigned int t = getTime();
         this->data = stbi_load(filename, &x, &y, &n, 0);
+        //cout << "load file time: " << getTime() - t << endl;
         //cout << "Load image " <<filename << " (n= " << n << ") time: " << getTime() - t << endl;
         
         if(!data) {
             cout << "Failed to load texture " << filename  << endl;
             exit(0);
         }
+        
+        if(multiRes) {
+            int factor = 2;
+            width_low = width/factor;
+            height_low = height/factor;
+            //unsigned int t = getTime();
+            data_low = new unsigned char[width_low*height_low];
+            for (int r = 0; r < height_low; r++) {
+                for(int c=0; c < width_low; c++) {
+                    data_low[r*width_low+c] = data[r*factor*width + c*factor];
+                }
+            }
+            //stbir_resize_uint8( this->data , width , height , 0,
+            //                   this->data_low, width_low, height_low, 0, numChannel);
+            //cout << "resize time: " << getTime() - t << endl;
+        }
+        
         initialized = false;
     }
     
-    void Texture::initTexture() {
+    void Texture::initTexture(int quality) {
+        
+        if (quality != currentQuality && multiRes) {
+            currentQuality = quality;
+            initialized = false;
+        }
         
         if(!created) {
             //init texture
@@ -71,48 +98,76 @@ namespace tessterrain {
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, magFilter);
             glBindTexture(GL_TEXTURE_2D, 0);
             
+            if(multiRes) {
+                glActiveTexture(glunit);
+                glGenTextures(1, &gluid_low);
+                glBindTexture(GL_TEXTURE_2D, gluid_low);
+                glTexImage2D(GL_TEXTURE_2D, 0, format, width_low, height_low, 0, globalFormat, type, NULL);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER); //GL_CLAMP_TO_BORDER GL_REPEAT
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, minFilter);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, magFilter);
+                glBindTexture(GL_TEXTURE_2D, 0);
+            }
             created = true;
         }
         
         // cout << "initTexture" << endl;
         
         if (!initialized) {
+            
             glActiveTexture(glunit);
-            glBindTexture(GL_TEXTURE_2D, gluid);
             
-            unsigned int t = getTime();
-            //glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, globalFormat, GL_UNSIGNED_BYTE, data); //GL_UNSIGNED_INT_8_8_8_8_REV
-            glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, globalFormat, type, data);
-            cout << numChannel << " glTexSubImage2D time: " << getTime() - t << endl;
-            //cout << "update texture " << gluid << " with data from " << this->filename << endl;
-            
-            //if(mipmap)
-            //    glGenerateMipmap(GL_TEXTURE_2D);
-            stbi_image_free(data);
-            data = NULL;
+            if (quality == QUALITY_LOW && multiRes) {
+                glBindTexture(GL_TEXTURE_2D, gluid_low);
+                
+                if(data_low) {
+                    //unsigned int t = getTime();
+                    //glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, globalFormat, GL_UNSIGNED_BYTE, data); //GL_UNSIGNED_INT_8_8_8_8_REV
+                    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width_low, height_low, globalFormat, type, data_low);
+                    //cout << numChannel << " glTexSubImage2D (low) time: " << getTime() - t << endl;
+                    stbi_image_free(data_low);
+                    data_low = NULL;
+                }
+            }
+            else {
+                glBindTexture(GL_TEXTURE_2D, gluid);
+                
+                if(data) {
+                    //unsigned int t = getTime();
+                    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, globalFormat, type, data);
+                    //cout << numChannel << " glTexSubImage2D (high) time: " << getTime() - t << endl;
+                    stbi_image_free(data);
+                    data = NULL;
+                }
+            }
             initialized = true;
             glBindTexture(GL_TEXTURE_2D, 0);
         }
     }
     
     // for terrain
-    Texture::Texture(int width, int height, int numchannels, unsigned int ind): data(0), initialized(false), created(false) {
+    Texture::Texture(int width, int height, int numchannels, unsigned int ind, bool multires): data(0), data_low(0), initialized(false), created(false) {
     
         this->numChannel = numchannels;
         this->width = width;
         this->height = height;
         this->gluid = 0;
+        this->gluid_low = 0;
         this->index = ind;
-        this->mipmap = false;
+        this->multiRes = multires;
+        this->currentQuality = QUALITY_HIGH;
     }
     
     void Texture::freeTexture()  {
         if(gluid)
             glDeleteTextures(1, &gluid);
-        cout << "free texture " << gluid << endl;
+        if(gluid_low)
+            glDeleteTextures(1, &gluid_low);
         initialized = false;
         created = false;
         gluid = 0;
+        gluid_low = 0;
     }
     
     
@@ -120,13 +175,23 @@ namespace tessterrain {
         //glActiveTexture(glunit);
         if(gluid)
             glDeleteTextures(1, &gluid);
+        if(gluid_low)
+            glDeleteTextures(1, &gluid_low);
     }
     
     void Texture::bind() {
-        if(!gluid)
-            return;
-        glActiveTexture(glunit);
-        glBindTexture(GL_TEXTURE_2D, gluid);
+        if(currentQuality == QUALITY_LOW) {
+            if(!gluid_low)
+                return;
+            glActiveTexture(glunit);
+            glBindTexture(GL_TEXTURE_2D, gluid_low);
+        }
+        else {
+            if(!gluid)
+                return;
+            glActiveTexture(glunit);
+            glBindTexture(GL_TEXTURE_2D, gluid);
+        }
     }
     
     void Texture::unbind() {

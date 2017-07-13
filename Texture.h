@@ -11,16 +11,19 @@
 
 using namespace std;
 
+#define QUALITY_HIGH 0
+#define QUALITY_LOW  1
+
 namespace tessterrain {
     
     class Texture
     {
     public:
-        Texture(int width, int height, int numchannels, unsigned int ind = 0);
+        Texture(int width, int height, int numchannels, unsigned int ind = 0, bool multires=false);
         ~Texture();
         
         void loadData(const char* filename);
-        void initTexture();
+        void initTexture(int quality=QUALITY_HIGH);
         void freeTexture();
         
         void bind();
@@ -31,7 +34,7 @@ namespace tessterrain {
         static unsigned int unitFromIndex(unsigned int _index);
         
         // Needs to be public to be accessed by GL calls
-        unsigned int gluid;
+        unsigned int gluid, gluid_low;
         unsigned int glunit;
         unsigned int index;
         
@@ -48,6 +51,7 @@ namespace tessterrain {
         
         unsigned int height;
         unsigned int width;
+        unsigned int height_low, width_low;
         unsigned int minFilter;
         unsigned int magFilter;
         unsigned int format;
@@ -56,9 +60,11 @@ namespace tessterrain {
         
         bool initialized;
         bool created;
+        bool multiRes;
         unsigned char* data;
+        unsigned char* data_low;
         int numChannel;
-        bool mipmap;
+        int currentQuality;
     };
     
 }; //namespace tessterrain

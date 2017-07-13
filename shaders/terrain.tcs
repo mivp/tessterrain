@@ -14,6 +14,7 @@ out terrainVertex {
 } Out[];
 
 uniform sampler2D heightMap;
+uniform vec2 fullTexSize;
 
 // Fully tessellated!
 const float tessellationLevel = 64.0;
@@ -74,8 +75,9 @@ void main()
     Out[gl_InvocationID].position = In[gl_InvocationID].position;
 
     // Calculate extent of this patch in texture coords [0,1]
-    vec2 patchExtent = maxTessLevel / ( textureSize( heightMap, 0 ) * maxTrianglesPerTexel );
-
+    //vec2 patchExtent = maxTessLevel / ( 2*textureSize( heightMap, 0 ) * maxTrianglesPerTexel );
+    vec2 patchExtent = maxTessLevel / ( fullTexSize * maxTrianglesPerTexel );
+    
     vec2 patchCornersXZ[4];
     patchCornersXZ[0] = Out[gl_InvocationID].position;                              // min x, min z
     patchCornersXZ[1] = Out[gl_InvocationID].position + vec2( 0.0, patchExtent.y ); // min x, max z
