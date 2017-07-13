@@ -17,7 +17,6 @@ namespace tessterrain {
     {
     public:
         Texture(int width, int height, int numchannels, unsigned int ind = 0);
-        Texture(unsigned int _index, unsigned int _width, unsigned int _height, unsigned int _format=GL_RGBA, unsigned int _globalFormat=GL_RGBA);
         ~Texture();
         
         void loadData(const char* filename);
@@ -28,11 +27,7 @@ namespace tessterrain {
         void unbind();
         int getWidth();
         int getHeight();
-        void resize(unsigned int _width, unsigned int _height);
-        void reloadData(const char* filename, bool mipmap = false);
         
-        static void resetUnit(int textureUnitOffset = 0);
-        static Texture* newFromNextUnit(unsigned int _width, unsigned int _height, unsigned int _format=GL_RGBA, unsigned int _globalFormat=GL_RGBA);
         static unsigned int unitFromIndex(unsigned int _index);
         
         // Needs to be public to be accessed by GL calls
@@ -57,6 +52,7 @@ namespace tessterrain {
         unsigned int magFilter;
         unsigned int format;
         unsigned int globalFormat;
+        unsigned int type;
         
         bool initialized;
         bool created;

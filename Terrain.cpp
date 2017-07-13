@@ -72,7 +72,7 @@ namespace tessterrain {
         m_terrainTexture = new TerrainTexture();
         m_terrainTexture->heightmap = new Texture(3648, 3648, 1, 0);
         if(m_info.texture != "")
-            m_terrainTexture->texture = new Texture(1600, 1600, 3, 1);
+            m_terrainTexture->texture = new Texture(1600, 1600, 4, 1);
         if(m_info.overlay != "")
             m_terrainTexture->overlay = new Texture(512, 512, 4, 2);
     }
@@ -270,12 +270,12 @@ namespace tessterrain {
         if (m_loadState != STATE_LOADED)
             return;
         
-        setup();
-        
         if(m_reload) {
-            m_terrainTexture->overlay->reloadData(m_info.overlay.c_str(), true);
+            m_terrainTexture->overlay->loadData(m_info.overlay.c_str());
             m_reload = false;
         }
+        
+        setup();
         
         GLSLProgram* shader = m_material->getShader();
         shader->bind();

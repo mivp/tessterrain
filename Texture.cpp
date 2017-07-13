@@ -23,7 +23,7 @@ namespace tessterrain {
     void Texture::loadData(const char* filename) {
         this->filename = filename;
         int x,y,n;
-        unsigned int t = getTime();
+        //unsigned int t = getTime();
         if(initialized && this->data)
             stbi_image_free(data);
         this->data = stbi_load(filename, &x, &y, &n, 0);
@@ -43,19 +43,25 @@ namespace tessterrain {
             glunit = unitFromIndex(index);
             minFilter = GL_LINEAR;
             magFilter = GL_LINEAR;
-            if(numChannel == 1)
+            type = GL_UNSIGNED_BYTE;
+            if(numChannel == 1) {
                 format = globalFormat = GL_RED;
-            else if (numChannel == 3)
+            }
+            else if (numChannel == 3) {
                 format = globalFormat = GL_RGB;
-            else
-                format = globalFormat = GL_RGBA;
+            }
+            else {
+                format = GL_RGBA8;
+                globalFormat = GL_RGBA;
+                type = GL_UNSIGNED_INT_8_8_8_8_REV;
+            }
             
             glActiveTexture(glunit);
             glGenTextures(1, &gluid);
             glBindTexture(GL_TEXTURE_2D, gluid);
             
             //unsigned int t = getTime();
-            glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, globalFormat, GL_UNSIGNED_BYTE, NULL);
+            glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, globalFormat, type, NULL);
             //cout << "recreate texture "  << gluid << " time: " << getTime() - t << endl;
             //cout << "init texture " << gluid << " " << width << " " << height << " " << numChannel << endl;
             
@@ -74,10 +80,10 @@ namespace tessterrain {
             glActiveTexture(glunit);
             glBindTexture(GL_TEXTURE_2D, gluid);
             
-            //unsigned int t = getTime();
+            unsigned int t = getTime();
             //glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, globalFormat, GL_UNSIGNED_BYTE, data); //GL_UNSIGNED_INT_8_8_8_8_REV
-            glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, globalFormat, GL_UNSIGNED_BYTE, data);
-            //cout << "glTexSubImage2D time: " << getTime() - t << endl;
+            glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, globalFormat, type, data);
+            cout << numChannel << " glTexSubImage2D time: " << getTime() - t << endl;
             //cout << "update texture " << gluid << " with data from " << this->filename << endl;
             
             //if(mipmap)
@@ -98,44 +104,6 @@ namespace tessterrain {
         this->gluid = 0;
         this->index = ind;
         this->mipmap = false;
-    }
-    
-    // for framebuffer
-    Texture::Texture(unsigned int _index, unsigned int _width, unsigned int _height, unsigned int _format, unsigned int _globalFormat)
-    {
-        index = _index;
-        glunit = unitFromIndex(_index);
-        gluid = 0;
-        width = _width;
-        height = _height;
-        minFilter = GL_LINEAR;
-        magFilter = GL_LINEAR;
-        format = _format;
-        globalFormat = _globalFormat;
-        
-        glActiveTexture(glunit);
-        glGenTextures(1, &gluid);
-        glBindTexture(GL_TEXTURE_2D, gluid);
-        
-        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, globalFormat, GL_UNSIGNED_BYTE, NULL);
-        if(format == GL_DEPTH_COMPONENT)
-        {
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-            glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
-        }
-        else
-        {
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-            glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColorB);
-        }
-        
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, minFilter);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, magFilter);
-        
-        glActiveTexture(GL_TEXTURE0);
-        initialized = true;
     }
     
     void Texture::freeTexture()  {
@@ -174,62 +142,11 @@ namespace tessterrain {
         return height;
     }
     
-    void Texture::resize(unsigned int _width, unsigned int _height)
-    {
-        width = _width;
-        height = _height;
-        
-        bind();
-        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, globalFormat, GL_UNSIGNED_BYTE, NULL);
-    }
-
-    void Texture::reloadData(const char* filename, bool mipmap) {
-
-        int x,y,n;
-        unsigned char *data = stbi_load(filename, &x, &y, &n, 0);
-        
-        if(!data) {
-            cout << "Failed to load texture "  << filename << endl;
-            exit(0);
-        }
-        
-        //cout << "img: " << filename << " width: " << x << " height: " << y << " comps: " << n << endl;
-        
-        //init texture
-        glActiveTexture(glunit);
-        glBindTexture(GL_TEXTURE_2D, gluid);
-        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, globalFormat, GL_UNSIGNED_BYTE, data);
-        //glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, globalFormat, GL_UNSIGNED_BYTE, data); 
-        
-        if(mipmap)
-            glGenerateMipmap(GL_TEXTURE_2D);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER); //GL_CLAMP_TO_BORDER GL_REPEAT
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, minFilter);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, magFilter);
-        glBindTexture(GL_TEXTURE_2D, 0);
-       
-	glBindTexture(GL_TEXTURE_2D, 0);
-	glActiveTexture(GL_TEXTURE0);
-
-        stbi_image_free(data);	
-    }
-
     
     // static
     unsigned int Texture::unitCount = 0;
     float Texture::borderColor[] = {1.0f, 1.0f, 1.0f, 1.0f};
     float Texture::borderColorB[] = {0.0f, 0.0f, 0.0f, 0.0f};
-    
-    void Texture::resetUnit(int textureUnitOffset)
-    {
-        unitCount = textureUnitOffset;
-    }
-    
-    Texture* Texture::newFromNextUnit(unsigned int _width, unsigned int _height, unsigned int _format, unsigned int _globalFormat)
-    {
-        return new Texture(unitCount++, _width, _height, _format, _globalFormat);
-    }
     
     unsigned int Texture::unitFromIndex(unsigned int index)
     {
