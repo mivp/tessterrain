@@ -19,6 +19,8 @@ add_definitions(-DOMEGALIB_MODULE)
 # Set module name and source files here
 add_library(${MODULE_NAME} MODULE 
 		INIReader.h
+		Utils.h
+		Utils.cpp
 		LRU.h
 		LRU.cpp
 		Thread.h

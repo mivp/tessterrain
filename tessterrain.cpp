@@ -107,7 +107,7 @@ public:
                 float* MVP = (context.projection*context.modelview).cast<float>().data();
                 
                 module->terrains->updateVisibility(MVP, campos);
-                module->terrains->render(MV, P);
+                module->terrains->render(MV, P, campos);
                 if(oglError) return;
     	    }
             
