@@ -14,18 +14,6 @@ using std::list;
 
 namespace tessterrain {
     
-    #define DOT3(v, w) ((v)[0] * (w)[0] + \
-                    (v)[1] * (w)[1] + \
-                    (v)[2] * (w)[2])
-    
-    class Utils {
-    public:
-        static int testPlane(const float V[4], const float b[6]);
-        static int testFrustum(float V[6][4], const float b[6]);
-        static void getFrustum(float V[6][4], const float X[16]);
-    };
-    
-    
     class TerrainLoaderThread: public Thread {
     private:
         wqueue<TessTerrain*>& m_queue;
@@ -71,7 +59,7 @@ namespace tessterrain {
         TerrainManager(string inifile);
         ~TerrainManager();
         void print();
-        void render(const float MV[16], const float P[16]);
+        void render(const float MV[16], const float P[16], const float campos[3]);
         
         // call all terrains
         void calViewportMatrix(int width, int height);
@@ -81,7 +69,7 @@ namespace tessterrain {
         float getOverlayAlpha();
         void setOverlayAlpha(float a);
         void reloadOverlay();
-
+        
         //
         int updateVisibility(const float MVP[16], const float campos[3]);
         
@@ -104,8 +92,7 @@ namespace tessterrain {
         int m_numVisibleTerrain;
         
         // loader threads
-	int m_preloadAll;
-        TexturePool* m_texturePool;
+        int m_preloadAll;
         int m_maxTerrainDisplay;
         int m_maxTerrainInMem;
         wqueue<TessTerrain*>  m_terrainQueue;
@@ -114,7 +101,10 @@ namespace tessterrain {
         // cache
         LRUCache* m_lruCache;
         //
+        glm::vec3 m_prevCamPosForSort;
         glm::vec3 m_prevCamPos;
+        unsigned int m_prevTime;
+        unsigned int m_idleTime;
     };
     
 }; // namespace tessterrain

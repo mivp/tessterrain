@@ -84,7 +84,7 @@ static void window_size_callback(GLFWwindow* window, int width, int height) {
 	
 }
 
-void init_resources(vector<string> inifiles) {
+void init_resources(string inifile) {
     
     camera = new Camera();
     //camera->SetPosition(glm::vec3(-102.684, 1940.91, 1665.38));
@@ -100,7 +100,7 @@ void init_resources(vector<string> inifiles) {
     camera->Update();
     
     // terrains
-    terrains = new TerrainManager("testdata/vic_usgs/vic_config.ini");
+    terrains = new TerrainManager(inifile);
     terrains->calViewportMatrix(WIDTH, HEIGHT);
     terrains->setHeightScale(0.4);
     
@@ -143,7 +143,6 @@ void doMovement() {
         cout << "up: " << camera->camera_up[0] << ", " << camera->camera_up[1] << ", " << camera->camera_up[2] << endl;
         keys[GLFW_KEY_I] = false;
     }
-    
     if(keys[GLFW_KEY_T]) {
         terrains->toggleFog();
         keys[GLFW_KEY_T] = false;
@@ -197,7 +196,7 @@ void mainLoop()
         
         float campos[3] = {camera->camera_position[0], camera->camera_position[1], camera->camera_position[2]};
         terrains->updateVisibility(MVP, campos);
-        terrains->render(MV, P);
+        terrains->render(MV, P, campos);
         //terrains->renderWithZoom(MV, P, PZoom);
         
         // render objects
@@ -231,61 +230,13 @@ void mainLoop()
 
 int main(int argc, char* argv[]) {
     
-    vector<string> inifiles;
+    string inifile;
     
     if(argc > 1) {
-        for(int i = 1; i < argc; i++)
-            inifiles.push_back(argv[i]);
+        inifile = argv[1];
     }
     else {
-        vector<string> files;
-        /*
-        files.push_back("s35_e141");
-        files.push_back("s35_e142");
-        
-        files.push_back("s36_e141");
-        iles.push_back("s36_e142");
-        files.push_back("s36_e143");
-        files.push_back("s36_e144");
-        files.push_back("s36_e145");
-        files.push_back("s36_e146");
-        files.push_back("s36_e147");
-        */
-        //files.push_back("s37_e141");
-        //files.push_back("s37_e142");
-        //files.push_back("s37_e143");
-        //files.push_back("s37_e144");
-        //files.push_back("s37_e145");
-        //files.push_back("s37_e146");
-        //files.push_back("s37_e147");
-        //files.push_back("s37_e148");
-        
-        files.push_back("s38_e141");
-        files.push_back("s38_e142");
-        files.push_back("s38_e143");
-        files.push_back("s38_e144");
-        //files.push_back("s38_e145");
-        //files.push_back("s38_e146");
-        //files.push_back("s38_e147");
-        //files.push_back("s38_e148");
-        //files.push_back("s38_e149");
-        
-        files.push_back("s39_e141");
-        files.push_back("s39_e142");
-        files.push_back("s39_e143");
-        files.push_back("s39_e144");
-        //files.push_back("s39_e145");
-        //files.push_back("s39_e146");
-        //files.push_back("s39_e147");
-        
-        for(int i=0; i < files.size(); i++) {
-            string name = "";
-            name.append("/Users/toand/git/mivp/terrain/tessterrain/examples/sa4overlay/config/");
-            name.append(files[i]);
-            name.append("_1arc_v3.ini");
-            inifiles.push_back(name);
-        }
-
+        inifile = "testdata/vic_usgs/vic_config.ini";
     }
     
 
@@ -332,7 +283,7 @@ int main(int argc, char* argv[]) {
 	GLUtils::dumpGLInfo();
 
 	// init resources
-	init_resources(inifiles);
+	init_resources(inifile);
 
 	// Enter the main loop
 	mainLoop();

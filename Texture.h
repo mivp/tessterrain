@@ -24,7 +24,7 @@ namespace tessterrain {
         
         void loadData(const char* filename);
         void initTexture(int quality=QUALITY_HIGH);
-        void freeTexture();
+        void freeTexture(bool freedata=true);
         
         void bind();
         void unbind();
@@ -34,7 +34,7 @@ namespace tessterrain {
         static unsigned int unitFromIndex(unsigned int _index);
         
         // Needs to be public to be accessed by GL calls
-        unsigned int gluid, gluid_low;
+        unsigned int gluid;
         unsigned int glunit;
         unsigned int index;
         

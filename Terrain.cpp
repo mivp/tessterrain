@@ -72,7 +72,7 @@ namespace tessterrain {
         m_terrainTexture = new TerrainTexture();
         m_terrainTexture->heightmap = new Texture(3648, 3648, 1, 0, true);
         if(m_info.texture != "")
-            m_terrainTexture->texture = new Texture(1600, 1600, 4, 1);
+            m_terrainTexture->texture = new Texture(1600, 1600, 4, 1, true);
         if(m_info.overlay != "")
             m_terrainTexture->overlay = new Texture(512, 512, 4, 2);
     }
@@ -169,12 +169,12 @@ namespace tessterrain {
         m_loadState = STATE_LOADED;
     }
 
-    void TessTerrain::initTextures() {
+    void TessTerrain::initTextures(bool lowmode) {
         if(m_terrainTexture->heightmap)
-            m_terrainTexture->heightmap->initTexture(true);
+            m_terrainTexture->heightmap->initTexture(lowmode);
         
         if(m_terrainTexture->texture)
-            m_terrainTexture->texture->initTexture();
+            m_terrainTexture->texture->initTexture(lowmode);
         
         if(m_terrainTexture->overlay)
             m_terrainTexture->overlay->initTexture();
@@ -195,7 +195,7 @@ namespace tessterrain {
         m_loadState = STATE_NONE;
     }
     
-    void TessTerrain::setup(){
+    void TessTerrain::setup(bool lowmode){
         
         if(!m_material)
             m_material = new TessMaterial();
@@ -208,7 +208,7 @@ namespace tessterrain {
         if (m_loadState != STATE_LOADED)
             return;
         
-        initTextures();
+        initTextures(lowmode);
 
         // patches
         if (m_vao == 0) {
@@ -265,7 +265,7 @@ namespace tessterrain {
     
     }
     
-    void TessTerrain::render(const float MV[16], const float P[16]) {
+    void TessTerrain::render(const float MV[16], const float P[16], bool lowmode) {
         
         if (m_loadState != STATE_LOADED)
             return;
@@ -275,7 +275,7 @@ namespace tessterrain {
             m_reload = false;
         }
         
-        setup();
+        setup(lowmode);
         
         GLSLProgram* shader = m_material->getShader();
         shader->bind();
