@@ -308,23 +308,23 @@ namespace tessterrain {
     
     void TerrainManager::render(const float MV[16], const float P[16], const float campos[3]) {
 
-	bool lowmode = true;
-	glm::vec3 curCamPos = glm::vec3(campos[0], campos[1], campos[2]);
-
-	if (m_preloadAll) {
-	    lowmode = false;
-	}       
-	else {
-	    if (glm::length(m_prevCamPos - curCamPos) > 10 || m_prevTime == 0) {
-            	m_prevTime = Utils::getTime();
-            	m_idleTime = 0;
+        bool lowmode = true;
+        glm::vec3 curCamPos = glm::vec3(campos[0], campos[1], campos[2]);
+        
+        if (m_preloadAll) {
+            lowmode = false;
+        }
+        else {
+            if (glm::length(m_prevCamPos - curCamPos) > 10 || m_prevTime == 0) {
+                m_prevTime = Utils::getTime();
+                m_idleTime = 0;
             }
             else {
-            	m_idleTime += Utils::getTime() - m_prevTime;
-            	if(m_idleTime > 1000)
+                m_idleTime += Utils::getTime() - m_prevTime;
+                if(m_idleTime > 1000)
                     lowmode = false;
             }
-	}
+        }
  
         m_prevCamPos = curCamPos;
         
