@@ -123,7 +123,7 @@ namespace tessterrain {
         void init();
         void nextDisplayMode(bool forward=true);
         void calCircleVertices(int sx, int sy, float r, vector<glm::vec2> &vertices);
-        void setup(bool lowmode = false);
+        void setup(bool lowHeightmap = false, bool lowTex = false);
 
     public:
         TessTerrain(TerrainInfo info, glm::vec3 globalHeightRange);
@@ -136,7 +136,7 @@ namespace tessterrain {
         int getState() { return m_loadState; }
         float* getBBox() { return m_info.bbox; }
         void loadTextures();
-        void initTextures(bool lowmode = false);
+        void initTextures(bool lowHeightmap = false, bool lowTex = false);
         void unloadTextures();
         
         void setState(LoadState state) { m_loadState = state; }
@@ -160,7 +160,7 @@ namespace tessterrain {
         void setOverlayAlpha(float a) { m_overlayAlpha = a; if(m_overlayAlpha<0) m_overlayAlpha=0; if(m_overlayAlpha>1) m_overlayAlpha=1;}
         void reloadOverlay();
         
-        void render(const float MV[16], const float P[16], bool lowmode = false);
+        void render(const float MV[16], const float P[16], bool lowHeightmap = false, bool lowTex = false);
         void renderWithZoom(const float MV[16], const float P[16], const float PZoom[16]);
         void drawCircle(int sx, int sy, float radius);
         void drawCircle2(int sx, int sy, float radius);

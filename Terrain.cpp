@@ -169,12 +169,12 @@ namespace tessterrain {
         m_loadState = STATE_LOADED;
     }
 
-    void TessTerrain::initTextures(bool lowmode) {
+    void TessTerrain::initTextures(bool lowHeightmap, bool lowTex) {
         if(m_terrainTexture->heightmap)
-            m_terrainTexture->heightmap->initTexture(lowmode);
+            m_terrainTexture->heightmap->initTexture(lowHeightmap);
         
         if(m_terrainTexture->texture)
-            m_terrainTexture->texture->initTexture(lowmode);
+            m_terrainTexture->texture->initTexture(lowTex);
         
         if(m_terrainTexture->overlay)
             m_terrainTexture->overlay->initTexture();
@@ -195,7 +195,7 @@ namespace tessterrain {
         m_loadState = STATE_NONE;
     }
     
-    void TessTerrain::setup(bool lowmode){
+    void TessTerrain::setup(bool lowHeightmap, bool lowTex){
         
         if(!m_material)
             m_material = new TessMaterial();
@@ -208,7 +208,7 @@ namespace tessterrain {
         if (m_loadState != STATE_LOADED)
             return;
         
-        initTextures(lowmode);
+        initTextures(lowHeightmap, lowTex);
 
         // patches
         if (m_vao == 0) {
@@ -265,7 +265,7 @@ namespace tessterrain {
     
     }
     
-    void TessTerrain::render(const float MV[16], const float P[16], bool lowmode) {
+    void TessTerrain::render(const float MV[16], const float P[16], bool lowHeightmap, bool lowTex) {
         
         if (m_loadState != STATE_LOADED)
             return;
@@ -275,7 +275,7 @@ namespace tessterrain {
             m_reload = false;
         }
         
-        setup(lowmode);
+        setup(lowHeightmap, lowTex);
         
         GLSLProgram* shader = m_material->getShader();
         shader->bind();

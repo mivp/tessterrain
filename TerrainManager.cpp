@@ -307,24 +307,31 @@ namespace tessterrain {
     }
     
     void TerrainManager::render(const float MV[16], const float P[16], const float campos[3]) {
-        
-        bool lowmode = true;
-        glm::vec3 curCamPos = glm::vec3(campos[0], campos[1], campos[2]);
-        if (glm::length(m_prevCamPos - curCamPos) > 10 || m_prevTime == 0) {
-            m_prevTime = Utils::getTime();
-            m_idleTime = 0;
-        }
-        else {
-            m_idleTime += Utils::getTime() - m_prevTime;
-            if(m_idleTime > 1000)
-                lowmode = false;
-        }
+
+	bool lowmode = true;
+	glm::vec3 curCamPos = glm::vec3(campos[0], campos[1], campos[2]);
+
+	if (m_preloadAll) {
+	    lowmode = false;
+	}       
+	else {
+	    if (glm::length(m_prevCamPos - curCamPos) > 10 || m_prevTime == 0) {
+            	m_prevTime = Utils::getTime();
+            	m_idleTime = 0;
+            }
+            else {
+            	m_idleTime += Utils::getTime() - m_prevTime;
+            	if(m_idleTime > 1000)
+                    lowmode = false;
+            }
+	}
+ 
         m_prevCamPos = curCamPos;
         
         if(lowmode) {
             for(list<TessTerrain*>::iterator it = m_displayList.begin(); it != m_displayList.end(); it++) {
                 TessTerrain* terrain = *it;
-                terrain->render(MV, P, true);
+                terrain->render(MV, P, !m_preloadAll, true);
             }
         }
         else {
@@ -332,9 +339,9 @@ namespace tessterrain {
             for(list<TessTerrain*>::iterator it = m_displayList.begin(); it != m_displayList.end(); it++) {
                 TessTerrain* terrain = *it;
                 if(ind < size2)
-                    terrain->render(MV, P, false);
+                    terrain->render(MV, P, !m_preloadAll, false);
                 else
-                    terrain->render(MV, P, true);
+                    terrain->render(MV, P, !m_preloadAll, true);
                 ind++;
             }
         }
