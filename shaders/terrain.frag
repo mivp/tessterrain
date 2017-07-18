@@ -54,6 +54,9 @@ in wireFrameVertex {
     vec2 texCoords;
 };
 
+uniform float opacity = 1.0;
+uniform float heightCutOff = 0.0;
+
 layout (location = 0) out vec4 fragColor;
 
 // Helper functions
@@ -243,6 +246,9 @@ vec4 shadeTexturedAndOverlayAndLit()
 
 void main()
 {
+    if(worldPosition.y < heightCutOff)
+        discard;
+
     // Compute fragment color depending upon selected shading mode
     vec4 c = shaderModel();
 
@@ -258,4 +264,5 @@ void main()
     {
         fragColor = c;
     }
+    fragColor.a = opacity;
 }

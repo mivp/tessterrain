@@ -19,8 +19,10 @@ namespace tessterrain {
     
     struct TerrainInfo {
         glm::dvec2 offset;
+        glm::dvec2 size;  // width(x) height(z)
         glm::vec2 heightRange;
-        glm::vec2 res;  // hres wres
+        float heightCutOff;
+        bool useFixedLevel;
         float bbox[6];
         string name;
         string terrain;
@@ -66,9 +68,11 @@ namespace tessterrain {
         //original data read from ini file
         glm::vec2 m_size;
         glm::vec2 m_fogRange;
-        bool m_initialized;
+        float m_height;
         float m_heightRangeScale;
         glm::vec2 m_horizontalScale;
+        float m_opacity;
+        float m_heightCutOff;
         
         //to pass to shaders
         glm::vec2 m_heightRange;
@@ -152,6 +156,7 @@ namespace tessterrain {
         //
         void calViewportMatrix(int width, int height);
         void nextDisplayMode(int num = 1); // position ~ forward, nagative ~ backward
+        void setHeight(float height);
         void moveTo(glm::vec3 pos);
         void moveTo(float x, float y, float z) { moveTo(glm::vec3(x, y, z)); }
         void setHeightScale(float scale);
@@ -159,6 +164,8 @@ namespace tessterrain {
         float getOverlayAlpha() { return m_overlayAlpha; }
         void setOverlayAlpha(float a) { m_overlayAlpha = a; if(m_overlayAlpha<0) m_overlayAlpha=0; if(m_overlayAlpha>1) m_overlayAlpha=1;}
         void reloadOverlay();
+        void setOpacity(float o) { m_opacity = o; }
+        float getOpacity() { return m_opacity; }
         
         void render(const float MV[16], const float P[16], bool lowHeightmap = false, bool lowTex = false);
         void renderWithZoom(const float MV[16], const float P[16], const float PZoom[16]);

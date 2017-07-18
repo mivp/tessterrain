@@ -17,25 +17,30 @@ namespace tessterrain {
         
         string str;
         
-        // terrains
-        str = reader.Get("general", "terrains", "");
-        assert(str.length());
-        
-        // res
-        m_res = glm::vec2(reader.GetReal("general", "wres", 1), reader.GetReal("general", "hres", 1));
-        assert(m_res[0] > 0 && m_res[1] > 0);
+        // size scale
+        str = reader.Get("general", "sizeScale", "");
+        vector<string> scaleStrs = strSplit(str);
+        assert(scaleStrs.size() == 2);
+        m_sizeScale = glm::vec2( ::atof(scaleStrs[0].c_str()), ::atof(scaleStrs[1].c_str()) );
         
         // ref point
-        m_refPoint = glm::dvec2(reader.GetReal("general", "refLat", 0), reader.GetReal("general", "refLon", 0));
+        str = reader.Get("general", "refPoint", "");
+        vector<string> refStrs = strSplit(str);
+        assert(scaleStrs.size() == 2);
+        m_refPoint = glm::dvec2( ::atof(refStrs[0].c_str()), ::atof(refStrs[1].c_str()) );
         
         // max number of terrains can be loaded
-	m_preloadAll = reader.GetInteger("general", "preloadAll", 0);
+        m_preloadAll = reader.GetInteger("general", "preloadAll", 0);
         m_maxTerrainDisplay = reader.GetInteger("general", "maxTerrainDisplay", 20);
         m_maxTerrainInMem = reader.GetInteger("general", "maxTerrainInMem", 30);
         // loader thread
         m_numLoaderThreads = reader.GetInteger("general", "numLoaderThreads", 2);
         // bbox enlarge factor
         float bboxEnlargeFactor = reader.GetReal("general", "bboxEnlargeFactor", 0);
+        // height cut off
+        float heightCutOff = reader.GetReal("general", "heightCutOff", 0);
+        // use fixed level?
+        int useFixedLevel = reader.GetInteger("general", "useFixedLevel", 0);
         
         // dirs
         m_terrainDir = reader.Get("general", "terrainDir", "");
@@ -47,11 +52,17 @@ namespace tessterrain {
         m_overlayDir = reader.Get("general", "overlaydir", "");
         string overlayFile = reader.Get("general", "overlayFile", "");
         
+        // terrains
+        str = reader.Get("general", "terrains", "");
+        assert(str.length());
         vector<string> terrains = strSplit(str);
         m_globalHeightRange = glm::vec3(FLT_MAX, -FLT_MAX, 1);
         for (int i=0; i < terrains.size(); i++) {
             TerrainInfo info;
             info.name = terrains[i];
+            
+            info.heightCutOff = heightCutOff;
+            info.useFixedLevel = useFixedLevel > 0;
             
             info.terrain = m_terrainDir;
             info.terrain.append("/");
@@ -71,9 +82,6 @@ namespace tessterrain {
                 info.overlay.append(strReplace( overlayFile, "%s", info.name));
             }
             
-            // res
-            info.res = m_res;
-            
             // heightRange
             str = reader.Get(info.name, "heightRange", "0, 1");
             vector<string> hrange = strSplit(str);
@@ -85,18 +93,21 @@ namespace tessterrain {
             m_globalHeightRange[2] = reader.GetReal("general", "heightRangeScale", 1);
             
             // calculate offset and bounding box
+            float oneDegreeLength = 30.86666667 * 3647; // m
             str = reader.Get(info.name, "pos", "");
             vector<string> pstr = strSplit(str);
             double lat = ::atof(pstr[0].c_str());
             double lon = ::atof(pstr[1].c_str());
-            double x = (lon - m_refPoint[1]) * 3647 * m_res[1] / 1.0002777999999921;
-            double z = (m_refPoint[0] - lat) * 3647 * m_res[0] / 1.0002777999999921;
+            double x = (lon - m_refPoint[1]) * oneDegreeLength * m_sizeScale[0];
+            double z = (m_refPoint[0] - lat) * oneDegreeLength * m_sizeScale[1];
             info.offset = glm::dvec2(x, z);
             
             lat = ::atof(pstr[2].c_str());
             lon = ::atof(pstr[3].c_str());
-            x = (lon - m_refPoint[1]) * 3647 * m_res[1] / 1.0002777999999921;
-            z = (m_refPoint[0] - lat) * 3647 * m_res[0] / 1.0002777999999921;
+            x = (lon - m_refPoint[1]) * oneDegreeLength * m_sizeScale[0];
+            z = (m_refPoint[0] - lat) * oneDegreeLength * m_sizeScale[1];
+            info.size = glm::dvec2(x - info.offset[0], z - info.offset[1]);
+            
             info.bbox[0] = info.offset[0];
             info.bbox[1] = 0;
             info.bbox[2] = info.offset[1];
@@ -174,7 +185,7 @@ namespace tessterrain {
     }
     
     void TerrainManager::print() {
-        cout << "res: " << m_res[0] << " " << m_res[1] << endl;
+        cout << "sizeScale: " << m_sizeScale[0] << " " << m_sizeScale[1] << endl;
         cout << std::setprecision(10) << "ref point: " << m_refPoint[0] << " " << m_refPoint[1] << endl;
         cout << "terrain dir: " << m_terrainDir << endl;
         cout << "texture dir: " << m_textureDir << endl;
@@ -182,6 +193,7 @@ namespace tessterrain {
         cout << "global heightRange: " << m_globalHeightRange[0] << " " << m_globalHeightRange[1] << endl;
         for(int i=0; i < m_terrainsInfo.size(); i++) {
             cout << endl << "======= " << m_terrainsInfo[i].name << " =====" << endl;
+            cout << "size: " << m_terrainsInfo[i].size[0] << " " << m_terrainsInfo[i].size[1] << endl;
             cout << "terrain: " << m_terrainsInfo[i].terrain << endl;
             cout << "texture: " << m_terrainsInfo[i].texture << endl;
             cout << "overlay: " << m_terrainsInfo[i].overlay << endl;
@@ -212,6 +224,12 @@ namespace tessterrain {
         }
     }
     
+    void TerrainManager::setHeight(float height) {
+        for(int i=0; i < m_terrains.size(); i++) {
+            m_terrains[i]->setHeight(height);
+        }
+    }
+    
     void TerrainManager::toggleFog() {
         for(int i=0; i < m_terrains.size(); i++) {
             m_terrains[i]->toggleFog();
@@ -234,6 +252,18 @@ namespace tessterrain {
         for(int i=0; i < m_terrains.size(); i++) {
             m_terrains[i]->reloadOverlay();
         }
+    }
+    
+    void TerrainManager::setOpacity(float o) {
+        for(int i=0; i < m_terrains.size(); i++) {
+            m_terrains[i]->setOpacity(o);
+        }
+    }
+    
+    float TerrainManager::getOpacity() {
+        if (m_terrains.size())
+            return m_terrains[0]->getOpacity();
+        return 0;
     }
 
     

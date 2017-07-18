@@ -67,6 +67,21 @@ public:
         terrains->reloadOverlay();
     }
 
+    void setHeight(float height)
+    {
+        terrains->setHeight(height);
+    }
+
+    void setOpacity(float o) 
+    {
+        terrains->setOpacity(o);
+    }
+
+    float getOpacity()
+    {
+        return terrains->getOpacity();
+    }
+
     TerrainManager* terrains;
     bool visible;
     bool updateviewport;
@@ -151,6 +166,9 @@ BOOST_PYTHON_MODULE(tessterrain)
     PYAPI_METHOD(TessTerrainRenderModule, toggleFog)
     PYAPI_METHOD(TessTerrainRenderModule, setOverlayAlpha)
     PYAPI_METHOD(TessTerrainRenderModule, reloadOverlay)
+    PYAPI_METHOD(TessTerrainRenderModule, setHeight)
+    PYAPI_METHOD(TessTerrainRenderModule, setOpacity)
+    PYAPI_METHOD(TessTerrainRenderModule, getOpacity)
     ;
 
     def("initialize", initialize, PYAPI_RETURN_REF);

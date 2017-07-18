@@ -26,6 +26,7 @@ float dt = 0;
 #define HEIGHT 768
 
 TerrainManager* terrains;
+TerrainManager* terrainOverlay;
 vector<Mesh*> objects;
 
 Camera* camera = NULL;
@@ -100,9 +101,20 @@ void init_resources(string inifile) {
     camera->Update();
     
     // terrains
-    terrains = new TerrainManager(inifile);
+    //terrains = new TerrainManager(inifile);
+    terrains = new TerrainManager("terraindata/apps/overlayterrain/vic_config.ini");
     terrains->calViewportMatrix(WIDTH, HEIGHT);
     terrains->setHeightScale(0.4);
+    //terrains->print();
+    
+    //
+    terrainOverlay = new TerrainManager("terraindata/apps/overlayterrain/data_config.ini");
+    terrainOverlay->calViewportMatrix(WIDTH, HEIGHT);
+    terrainOverlay->setHeightScale(1);
+    terrainOverlay->nextDisplayMode(2);
+    terrainOverlay->setHeight(400);
+    terrainOverlay->setOpacity(0.7);
+    terrainOverlay->print();
     
     // create a sample object at origin
     Mesh* m = MeshUtils::sphere(200, 10, 10);
@@ -113,6 +125,9 @@ void init_resources(string inifile) {
 void free_resources()
 {
     delete terrains;
+    
+    if(terrainOverlay)
+        delete terrainOverlay;
     
     if(camera)
         delete camera;
@@ -150,6 +165,16 @@ void doMovement() {
     if(keys[GLFW_KEY_N]) {
         terrains->nextDisplayMode(1);
         keys[GLFW_KEY_N] = false;
+    }
+    if(keys[GLFW_KEY_M]) {
+        float o = terrainOverlay->getOpacity();
+        o += 0.05; if (o > 1.0) o = 0;
+        terrainOverlay->setOpacity(o);
+        keys[GLFW_KEY_M] = false;
+    }
+    if(keys[GLFW_KEY_P]) {
+        terrainOverlay->nextDisplayMode(1);
+        keys[GLFW_KEY_P] = false;
     }
     if(keys[GLFW_KEY_O]) {
         float alpha = terrains->getOverlayAlpha();
@@ -198,6 +223,9 @@ void mainLoop()
         terrains->updateVisibility(MVP, campos);
         terrains->render(MV, P, campos);
         //terrains->renderWithZoom(MV, P, PZoom);
+        
+        terrainOverlay->updateVisibility(MVP, campos);
+        terrainOverlay->render(MV, P, campos);
         
         // render objects
         for(int i = 0; i < objects.size(); i++)

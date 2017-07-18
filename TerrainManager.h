@@ -65,10 +65,13 @@ namespace tessterrain {
         void calViewportMatrix(int width, int height);
         void nextDisplayMode(int num = 1);
         void setHeightScale(float scale);
+        void setHeight(float height);
         void toggleFog();
         float getOverlayAlpha();
         void setOverlayAlpha(float a);
         void reloadOverlay();
+        void setOpacity(float o);
+        float getOpacity();
         
         //
         int updateVisibility(const float MVP[16], const float campos[3]);
@@ -80,7 +83,7 @@ namespace tessterrain {
         
     private:
         glm::dvec2 m_refPoint;      // lat, lon
-        glm::vec2 m_res;            // hres, wres
+        glm::vec2 m_sizeScale;      // x, y
         glm::vec3 m_globalHeightRange; // min, max, scale
         string m_terrainDir;
         string m_textureDir;

@@ -25,10 +25,16 @@ overlay_alpha_value = 0.6
 #INIT
 # Terrain
 tt = tessterrain.initialize()
-tt.initTerrain('vic_config.ini')
-
+tt.initTerrain('terraindata/apps/overlayterrain/vic_config.ini')
 tt.nextDisplayMode(-1)
 tt.setHeightScale(1.0 * data_height_scale);
+
+ttOverlay = tessterrain.initialize()
+ttOverlay.initTerrain('terraindata/apps/overlayterrain/data_config.ini')
+ttOverlay.nextDisplayMode(-1)
+ttOverlay.setHeightScale(1.0 * data_height_scale);
+ttOverlay.setHeight(400)
+ttOverlay.setOpacity(0.7)
 
 # Scene
 scene = getSceneManager()

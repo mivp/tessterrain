@@ -20,7 +20,7 @@ namespace tessterrain {
     /**
      Tessellation Terrain
      */
-    TessTerrain::TessTerrain(TerrainInfo info, glm::vec3 globalHeightRange): m_material(0), m_initialized(false),
+    TessTerrain::TessTerrain(TerrainInfo info, glm::vec3 globalHeightRange): m_material(0), m_height(0), m_opacity(1.0f),
     m_terrainTexture(0), m_vbo(0), m_vao(0),  m_displayMode(0), m_overlayAlpha(0.5), 
     m_fog(false), m_reload(false), m_circleVao(0), m_circleMaterial(0), m_circleVao2(0), m_loadState(STATE_NONE)
     {
@@ -66,15 +66,23 @@ namespace tessterrain {
         
         m_heightRange = m_heightRangeScale * glm::vec2(m_info.heightRange[0], m_info.heightRange[1] - m_info.heightRange[0]);
         
+        m_heightCutOff = m_info.heightCutOff;
+        
         moveTo(glm::vec3(m_info.offset[0], 0, m_info.offset[1]));
         
         // texture
+        int x, y, n;
         m_terrainTexture = new TerrainTexture();
-        m_terrainTexture->heightmap = new Texture(3648, 3648, 1, 0, true);
-        if(m_info.texture != "")
-            m_terrainTexture->texture = new Texture(1600, 1600, 4, 1, true);
-        if(m_info.overlay != "")
-            m_terrainTexture->overlay = new Texture(512, 512, 4, 2);
+        stbi_info(m_info.terrain.c_str(), &x, &y, &n);
+        m_terrainTexture->heightmap = new Texture(x, y, n, 0, true);
+        if(m_info.texture != "") {
+            stbi_info(m_info.texture.c_str(), &x, &y, &n);
+            m_terrainTexture->texture = new Texture(x, y, n, 1, true);
+        }
+        if(m_info.overlay != "") {
+            stbi_info(m_info.overlay.c_str(), &x, &y, &n);
+            m_terrainTexture->overlay = new Texture(x, y, n, 2);
+        }
     }
     
     void TessTerrain::nextDisplayMode(bool forward) {
@@ -116,14 +124,22 @@ namespace tessterrain {
 	    nextDisplayMode(forward);
     }
     
+    void TessTerrain::setHeight(float height) {
+        m_height = height;
+        m_heightCutOff = height + m_info.heightCutOff;
+        //moveTo(m_info.offset[0], height, m_info.offset[1]);
+        m_verticalScale = glm::vec2(m_globalHeightRange[0] + m_height, m_globalHeightRange[1]-m_globalHeightRange[0]);
+        m_heightRange = glm::vec2(m_info.heightRange[0] + m_height, m_info.heightRange[1] - m_info.heightRange[0]);
+    }
+    
     void TessTerrain::moveTo(glm::vec3 pos) {
         m_modelMatrix = glm::mat4(1.0);
         m_modelMatrix = glm::translate(m_modelMatrix, pos);
     }
     
     void TessTerrain::setHeightScale(float scale) {
-        m_verticalScale = scale * glm::vec2(m_globalHeightRange[0], m_globalHeightRange[1]-m_globalHeightRange[0]);
-        m_heightRange = scale * glm::vec2(m_info.heightRange[0], m_info.heightRange[1] - m_info.heightRange[0]);
+        m_verticalScale = scale * glm::vec2(m_globalHeightRange[0] + m_height, m_globalHeightRange[1]-m_globalHeightRange[0]);
+        m_heightRange = scale * glm::vec2(m_info.heightRange[0] + m_height, m_info.heightRange[1] - m_info.heightRange[0]);
     }
     
     void TessTerrain::reloadOverlay() {
@@ -203,7 +219,7 @@ namespace tessterrain {
         if(!m_circleMaterial)
             m_circleMaterial = new SSMaterial();
         
-        // print();
+        //print();
         
         if (m_loadState != STATE_LOADED)
             return;
@@ -255,7 +271,7 @@ namespace tessterrain {
             }
             
             // cal values
-            m_horizontalScale = glm::vec2(m_info.res[1] * m_terrainTexture->heightmap->getWidth(), m_info.res[0] * m_terrainTexture->heightmap->getHeight());
+            m_horizontalScale = glm::vec2(m_info.size[0], m_info.size[1]);
             if(m_horizontalScale[1] < 0)
                 m_horizontalScale[1] *= -1;
             
@@ -352,16 +368,22 @@ namespace tessterrain {
         shader->setUniform( "material.Ks",  glm::vec3( 0.3f, 0.3f, 0.3f ) );
         shader->setUniform( "material.shininess", 1.0f );
         
-        shader->setUniform( "colorStop1", 0.0f );
+        shader->setUniform( "colorStop1", float(m_verticalScale[0]) );
         shader->setUniform( "colorStop2", float(m_verticalScale[0] + 0.25*m_verticalScale[1]) );
         shader->setUniform( "colorStop3", float(m_verticalScale[0] + 0.5*m_verticalScale[1]) );
         shader->setUniform( "colorStop4", float(m_verticalScale[0] + 0.75*m_verticalScale[1]) );
         shader->setUniform( "colorStop5", float(m_verticalScale[0] + m_verticalScale[1]) );
         
+        shader->setUniform( "opacity", float(m_opacity));
+        shader->setUniform( "heightCutOff", float(m_heightCutOff));
+        shader->setUniform( "useFixedLevel", m_info.useFixedLevel);
+        
         // draw
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_CULL_FACE);
         glCullFace(GL_BACK);
+        glEnable (GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glBindVertexArray(m_vao);
         glPatchParameteri(GL_PATCH_VERTICES, 1);
         glDrawArrays( GL_PATCHES, 0, m_patchCount );
