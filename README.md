@@ -77,11 +77,8 @@ Example
 [general]
 terrains = 	s38_e141, s38_e142, s38_e143, s38_e144,
 	        s39_e141, s39_e142, s39_e143, s39_e144,
-hres = 10  ; 1 pixel ~ 10m
-wres = 10
-refLat = -36.9998611    ; topleft reference point
-refLon = 140.9998611
-;heightRangeScale = 1
+sizeScale = 0.3, 0.3	; x, z
+refPoint = -36.9998611, 140.9998611 ; lat, lon
 preloadAll = 0          ; preload all terrrains
 maxTerrainDisplay = 35  ; max terrains can be displayed
 maxTerrainInMem = 40    ; max terrains can be stored in VRAM
