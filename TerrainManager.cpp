@@ -266,13 +266,17 @@ namespace tessterrain {
         return 0;
     }
 
-    
+    /*
     struct {
         bool operator()(const TessTerrain* a, const TessTerrain* b) const
         {
             return a->getDistanceToCam() < b->getDistanceToCam();
         }
     } customLess;
+    */
+    bool customLess(const TessTerrain* a, const TessTerrain* b) {
+        return a->getDistanceToCam() < b->getDistanceToCam();
+    }
     
     // update list of visible terrain
     int TerrainManager::updateVisibility(const float MVP[16], const float campos[3]) {

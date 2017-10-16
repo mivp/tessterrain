@@ -71,7 +71,7 @@ def onObjectSelected(node, distance):
 		selected = node
 		print node.getName()
 		node.setEffect("colored -d green")
-
+	
 
 # load paddocks
 for i in range(nummesh):
@@ -81,7 +81,7 @@ for i in range(nummesh):
 aimSet = LineSet.create()
 aimSet.setEffect('colored -d white -g 2.0 -s 20')
 aim = aimSet.addLine()
-aim.setThickness(0.3)
+aim.setThickness(0.01)
 
 
 # MENU
@@ -105,6 +105,7 @@ def onUpdate(frame, t, dt):
 def onEvent():
 	global ray_start
 	global ray_dir
+	global paddocks
 
 	e = getEvent()
 	#if(e.getType() != EventType.Update): print(e.getType() )
@@ -118,13 +119,23 @@ def onEvent():
 		if(r[0]):
 			ray_start = r[1]
 			ray_dir = r[2]
-		
+
+		"""
+		if e.isButtonDown(confirmButton) and r[0]:
+			print "press"
+			for name, p in paddocks.iteritems():
+				#print name, s, r[1], r[2]
+				hitData = hitNode(p, r[1], r[2])
+				if(hitData[0]):
+					p.setEffect('colored -e green')
+					break
+		"""
+
 		# When the confirm button is pressed:
 		if(e.isButtonDown(confirmButton)):
 			if(r[0]): 
 				querySceneRay(r[1], r[2], onObjectSelected)
-
-
+		
 #--------------------------------------------------------------------------------------------------
 setUpdateFunction(onUpdate)
 setEventFunction(onEvent)
