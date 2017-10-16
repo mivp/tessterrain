@@ -102,12 +102,13 @@ void init_resources(string inifile) {
     
     // terrains
     //terrains = new TerrainManager(inifile);
-    terrains = new TerrainManager("terraindata/apps/overlayterrain/vic_config.ini");
+    terrains = new TerrainManager("terraindata/apps/electricity_transmission/vic_config.ini");
     terrains->calViewportMatrix(WIDTH, HEIGHT);
     terrains->setHeightScale(0.4);
     //terrains->print();
     
     //
+    /*
     terrainOverlay = new TerrainManager("terraindata/apps/overlayterrain/data_config.ini");
     terrainOverlay->calViewportMatrix(WIDTH, HEIGHT);
     terrainOverlay->setHeightScale(1);
@@ -115,6 +116,7 @@ void init_resources(string inifile) {
     terrainOverlay->setHeight(400);
     terrainOverlay->setOpacity(0.7);
     terrainOverlay->print();
+    */
     
     // create a sample object at origin
     Mesh* m = MeshUtils::sphere(200, 10, 10);
@@ -167,13 +169,16 @@ void doMovement() {
         keys[GLFW_KEY_N] = false;
     }
     if(keys[GLFW_KEY_M]) {
-        float o = terrainOverlay->getOpacity();
-        o += 0.05; if (o > 1.0) o = 0;
-        terrainOverlay->setOpacity(o);
+        if(terrainOverlay) {
+            float o = terrainOverlay->getOpacity();
+            o += 0.05; if (o > 1.0) o = 0;
+            terrainOverlay->setOpacity(o);
+        }
         keys[GLFW_KEY_M] = false;
     }
     if(keys[GLFW_KEY_P]) {
-        terrainOverlay->nextDisplayMode(1);
+        if(terrainOverlay)
+            terrainOverlay->nextDisplayMode(1);
         keys[GLFW_KEY_P] = false;
     }
     if(keys[GLFW_KEY_O]) {
@@ -224,8 +229,8 @@ void mainLoop()
         terrains->render(MV, P, campos);
         //terrains->renderWithZoom(MV, P, PZoom);
         
-        terrainOverlay->updateVisibility(MVP, campos);
-        terrainOverlay->render(MV, P, campos);
+        //terrainOverlay->updateVisibility(MVP, campos);
+        //terrainOverlay->render(MV, P, campos);
         
         // render objects
         for(int i = 0; i < objects.size(); i++)
