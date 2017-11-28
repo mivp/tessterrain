@@ -92,8 +92,12 @@ void init_resources(string inifile) {
     //camera->SetLookAt(glm::vec3(-101.934, 1940.47, 1665.88));
     //camera->SetPosition(glm::vec3(46930.8, 7805.12, 65433.8));
     //camera->SetLookAt(glm::vec3(46930.9, 7804.7, 65432.9));
-    camera->SetPosition(glm::vec3(43580.8, 2597.59, 38553));
-    camera->SetLookAt(glm::vec3(43580.7, 2597.15, 38552.1));
+    //aus
+    //camera->SetPosition(glm::vec3(43580.8, 2597.59, 38553));
+    //camera->SetLookAt(glm::vec3(43580.7, 2597.15, 38552.1));
+    //cyprus
+    camera->SetPosition(glm::vec3(55875.2, 18618.9, 160089));
+    camera->SetLookAt(glm::vec3(55875.8, 18618.4, 160088));
     camera->SetViewport(0, 0, WIDTH, HEIGHT);
     camera->SetClipping(1, 1000000);
     //speed
@@ -102,9 +106,9 @@ void init_resources(string inifile) {
     
     // terrains
     //terrains = new TerrainManager(inifile);
-    terrains = new TerrainManager("terraindata/apps/electricity_transmission/vic_config.ini");
+    terrains = new TerrainManager("/Users/toand/git/mivp/terrain/terraindata/cyprus/cyprus_config.ini");
     terrains->calViewportMatrix(WIDTH, HEIGHT);
-    terrains->setHeightScale(0.4);
+    //terrains->setHeightScale(0.4);
     //terrains->print();
     
     //
