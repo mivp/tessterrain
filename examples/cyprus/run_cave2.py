@@ -6,6 +6,7 @@ from math import *
 from euclid import *
 from omega import *
 from cyclops import *
+import tessterrain
 
 csv_filename = "terraindata/cyprus/data.csv"
 ref_point = {}
@@ -125,6 +126,13 @@ with open(csv_filename, 'rb') as csvfile:
     for site in sites:
         drawSite(site, options)
 
+
+def setHeightScale(value):
+    val = (float(value) / 100) * (hscale_max - hscale_min) + hscale_min
+    hscale_label.setText('Height scale: ' + str(val))
+    hscale_value = val * data_height_scale
+    tt.setHeightScale(hscale_value)
+    #vf.setElevationScale(hscale_value)
 
 # menu
 mm = MenuManager.createAndInitialize()
