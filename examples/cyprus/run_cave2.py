@@ -64,14 +64,13 @@ cam.addChild(light2)
 
 # ui
 uim = UiModule.createAndInitialize()
-imgplot = loadImage('terraindata/cyprus/colormap.jpg')
+imgplot = loadImage('terraindata/cyprus/colormap2.png')
 hplot = Container.create(ContainerLayout.LayoutVertical, uim.getUi())
 hplot.setVisible(True)
 hplot.setStyle('fill: #aaaaaa80')
 hplot.setSize(Vector2(imgplot.getWidth(), imgplot.getHeight())) 
 #hplot.setAutosize(True)
-#hplot.setPosition(Vector3(10000, 200, 0))
-hplot.setPosition(Vector3(10, 10, 0))
+hplot.setPosition(Vector3(12500, 20, 0))
 plotview = Image.create(hplot)
 plotview.setData(imgplot)
 #plotview.setPosition(Vector2(2, 2))
@@ -84,9 +83,9 @@ def drawSite(site, options):
     lon = float(site["Longitude"])
     height = float(site["Height"]) + 200
     vessel = int(site["Vessels"]) 
-    vessel_c = int(min(vessel / 5, 5))
+    vessel_c = int(min(int(vessel / 5), 4)) + 1
     bead = int(site["Beads"])
-    bead_c = int(min(bead / 5, 5))
+    bead_c = int(min(int(bead / 5), 4)) + 1
     display = '(' + site["Tier"] + ') '  + site["Short"]
 
     # calculate position
@@ -101,7 +100,7 @@ def drawSite(site, options):
     text.setPosition(Vector3(0.5, 0.4, 0.5))
     #text.setPosition(pos)
     text.setFontResolution(120)
-    text.setColor(Color('green'))
+    text.setColor(Color('yellow'))
 
     center = SphereShape.create(0.5, 2)
     center.setScale(Vector3(1000, 1000, 1000))
@@ -138,6 +137,8 @@ def drawSite(site, options):
         
     else:
         print 'both'
+        center.setPosition(pos[0]+size/2, pos[1], pos[2])
+
         cylinder = CylinderShape.create(1, 0.5, 0.5, 1, 16)
         cylinder.pitch(radians(-90))
         cylinder.setScale(Vector3(size, size, size))
