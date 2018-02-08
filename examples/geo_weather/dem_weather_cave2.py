@@ -12,7 +12,8 @@ from omega import *
 from cyclops import *
 from omegaToolkit import *
 
-csv_filename = "testdata/south_west_usgs/south_west_stations.csv"
+csv_filename = "terraindata/apps/geo_weather/south_west_stations.csv"
+db_filename = "terraindata/apps/geo_weather/south_west_stations.db"
 
 ref_point = {}
 ref_point['lat'] = -36.9998611
@@ -33,25 +34,25 @@ tt.setHeightScale(1.0 * data_height_scale);
 
 #vector field
 vf = vectorfield.initialize()
-vf.init(0, 0, 109379.614343, 72919.7428954, 4000, 3500);
-#vf.loadElevationFromFile("vic_sw_elevation2.txt");
+vf.init(0, 0, 101313.660011, 67542.4400073, 4000, 3500);
+#vf.loadElevationFromFile("terraindata/apps/geo_weather/vic_sw_elevation2.txt");
 vf.setElevationScale(1.0 * data_height_scale);
 
-vf.addControlPoint( 72195.6097426 , 10213.8282815 , 4.9193495505 , 9.838699101 );
-vf.addControlPoint( 80216.7814611 , 8390.83470912 , 6.36396103068 , 6.36396103068 );
-vf.addControlPoint( 19693.3948579 , 52142.6804464 , 10.6066017178 , 10.6066017178 );
-vf.addControlPoint( 91519.3416099 , 67820.4251689 , -6.36396103068 , 6.36396103068 );
-vf.addControlPoint( 12036.8218539 , 21151.7897158 , 9.19238815543 , 9.19238815543 );
-vf.addControlPoint( 9484.63085255 , 33548.146008 , 8.049844719 , 4.0249223595 );
-vf.addControlPoint( 38652.5280107 , 23703.9807172 , 7.6026311235 , 15.205262247 );
-vf.addControlPoint( 64539.0367386 , 39017.1267252 , 4.9193495505 , 9.838699101 );
-vf.addControlPoint( 101728.105615 , 44850.7061568 , 8.4970583145 , 16.994116629 );
-vf.addControlPoint( 58340.8585925 , 10943.0257105 , 14.1421356237 , 14.1421356237 );
-vf.addControlPoint( 44850.7061568 , 50684.2855885 , 5.8137767415 , 11.627553483 );
-vf.addControlPoint( 17141.2038566 , 47767.4958726 , 5.8137767415 , 11.627553483 );
-vf.addControlPoint( 22245.5858592 , 48861.2920161 , 14.1421356237 , 14.1421356237 );
-vf.addControlPoint( 52871.8778753 , 47038.2984437 , 7.6026311235 , 15.205262247 );
-vf.addControlPoint( 70737.2148847 , 25891.573004 , 8.4970583145 , 16.994116629 );
+vf.addControlPoint(94226.3946326, 41543.2914269, 7.0, 0.0)
+vf.addControlPoint(66871.7064297, 9460.63242348, 0.0, 0.0)
+vf.addControlPoint(84770.4530316, 62819.1600292, 13.416407865, 6.7082039325)
+vf.addControlPoint(74301.3748305, 7772.0714233, 9.0, 0.0)
+vf.addControlPoint(54038.6428283, 10136.0568236, 21.466252584, 10.733126292)
+vf.addControlPoint(15877.1642242, 44244.9890272, 2.82842712475, -2.82842712475)
+vf.addControlPoint(65520.8576295, 23982.257025, -0.894427191, -1.788854382)
+vf.addControlPoint(35802.1840263, 21955.9838248, 3.1304951685, 6.260990337)
+vf.addControlPoint(41543.2914269, 46946.6866275, -4.94974746831, -4.94974746831)
+vf.addControlPoint(59779.7502289, 36139.8962264, -2.82842712475, 2.82842712475)
+vf.addControlPoint(18241.1496244, 48297.5354277, -4.24264068712, -4.24264068712)
+vf.addControlPoint(8785.20802341, 31074.2132258, 0.0, 0.0)
+vf.addControlPoint(48972.9598277, 43569.5646272, 0.0, 0.0)
+vf.addControlPoint(20605.1350247, 45258.1256273, -6.260990337, 3.1304951685)
+vf.addControlPoint(11149.1934237, 19591.9984246, 2.82842712475, -2.82842712475)
 
 vf.setPointScale(1.5)
 vf.updateVectorField()
@@ -78,16 +79,16 @@ setNearFarZ(2, 400000)
 uim = UiModule.createAndInitialize()
 
 # DB
-db_filename = "testdata/vic_usgs/south_west_stations.db"
 db = DBUtil(db_filename)
 
 # Stations
 station_rows = db.getStations()
 station_data = db.getData('20170515090000')
+size_scale = [0.3, 0.3] # as in config.ini
 stations = {}
 for r in station_rows:
     s = Station(r, uim)
-    s.updatePosition(ref_point, data_height_scale)
+    s.updatePosition(ref_point, size_scale, data_height_scale)
     stations[s.id] = s
 
 for d in station_data:

@@ -65,10 +65,11 @@ class Station:
         self.sphere.addChild(self.img1)
 
 
-    def updatePosition(self, ref_point, hscale_value):
-        x = (self.lon - ref_point['lon']) * 36470 / 1.0002777999999921;
+    def updatePosition(self, ref_point, size_scale, hscale_value):
+        oneDegreeLength = 30.86666667 * 3647
+        x = (self.lon - ref_point['lon']) * oneDegreeLength * size_scale[0];
         height = hscale_value * self.height + 200
-        z = -1 * (self.lat - ref_point['lat']) * 36470 / 1.0002777999999921;
+        z = -1 * (self.lat - ref_point['lat']) * oneDegreeLength * size_scale[1];
         self.position = Vector3(x, height, z)
         # update
         self.sphere.setPosition(self.position)
