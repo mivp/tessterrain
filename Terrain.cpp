@@ -36,6 +36,7 @@ namespace tessterrain {
         m_displayModeNames.push_back("shadeTexturedAndLit");
         m_displayModeNames.push_back("shadeTexturedAndOverlay");
         m_displayModeNames.push_back("shadeTexturedAndOverlayAndLit");
+        m_displayModeNames.push_back("shadeTrendPlunge");
         
         init();
     }
@@ -111,17 +112,17 @@ namespace tessterrain {
     }
 
     void TessTerrain::nextDisplayMode(int num) {
-	int numsteps;
-	bool forward = true;
-	if (num < 0) {
-	    numsteps = -num;
-	    forward = false;
-	}
-	else {
-	    numsteps =  num;
-	}
-	for (int i=0; i<numsteps; i++) 
-	    nextDisplayMode(forward);
+        int numsteps;
+        bool forward = true;
+        if (num < 0) {
+            numsteps = -num;
+            forward = false;
+        }
+        else {
+            numsteps =  num;
+        }
+        for (int i=0; i<numsteps; i++)
+            nextDisplayMode(forward);
     }
     
     void TessTerrain::setHeight(float height) {

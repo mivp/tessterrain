@@ -120,6 +120,7 @@ namespace tessterrain {
             TexturedAndLit,
             TexturedAndOverlay,
             TexturedAndOverlayAndLit,
+            TrendPlunge,
             DisplayModeCount
         };
         

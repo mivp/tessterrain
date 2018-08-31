@@ -22,8 +22,8 @@ float last_time=0, current_time =0;
 //delta time
 float dt = 0;
 
-#define WIDTH 1024
-#define HEIGHT 768
+#define WIDTH 1366
+#define HEIGHT 800
 
 TerrainManager* terrains;
 TerrainManager* terrainOverlay;
@@ -93,11 +93,11 @@ void init_resources(string inifile) {
     //camera->SetPosition(glm::vec3(46930.8, 7805.12, 65433.8));
     //camera->SetLookAt(glm::vec3(46930.9, 7804.7, 65432.9));
     //aus
-    //camera->SetPosition(glm::vec3(43580.8, 2597.59, 38553));
-    //camera->SetLookAt(glm::vec3(43580.7, 2597.15, 38552.1));
+    camera->SetPosition(glm::vec3(43580.8, 2597.59, 38553));
+    camera->SetLookAt(glm::vec3(43580.7, 2597.15, 38552.1));
     //cyprus
-    camera->SetPosition(glm::vec3(55875.2, 18618.9, 160089));
-    camera->SetLookAt(glm::vec3(55875.8, 18618.4, 160088));
+    //camera->SetPosition(glm::vec3(55875.2, 18618.9, 160089));
+    //camera->SetLookAt(glm::vec3(55875.8, 18618.4, 160088));
     camera->SetViewport(0, 0, WIDTH, HEIGHT);
     camera->SetClipping(1, 1000000);
     //speed
@@ -106,8 +106,9 @@ void init_resources(string inifile) {
     
     // terrains
     //terrains = new TerrainManager(inifile);
-    terrains = new TerrainManager("/Users/toand/git/mivp/terrain/terraindata/cyprus/cyprus_config.ini");
+    terrains = new TerrainManager("/Users/toand/git/mivp/terrain/tessterrain/examples/geo_weather/vic_config.ini");
     terrains->calViewportMatrix(WIDTH, HEIGHT);
+    terrains->nextDisplayMode(-1);
     //terrains->setHeightScale(0.4);
     //terrains->print();
     

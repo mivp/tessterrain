@@ -1,5 +1,8 @@
 #version 400
 
+#define M_PI 3.14159265358979
+#define ESP 0.000001
+
 subroutine vec4 ShaderModelType();
 subroutine uniform ShaderModelType shaderModel;
 
@@ -149,6 +152,25 @@ vec4 wireFrame( const in vec4 color, const in vec4 wireFrameColor )
     return c;
 }
 
+vec4 HSVtoRGB(float h, float s, float v) 
+{
+  float r, g, b, f, p, q, t;
+  int i = int(floor(h * 6));
+  f = h * 6 - i;
+  p = v * (1 - s);
+  q = v * (1 - f * s);
+  t = v * (1 - (1 - f) * s);
+  switch (i % 6) {
+      case 0: r = v, g = t, b = p; break;
+      case 1: r = q, g = v, b = p; break;
+      case 2: r = p, g = v, b = t; break;
+      case 3: r = p, g = q, b = v; break;
+      case 4: r = t, g = p, b = v; break;
+      case 5: r = v, g = p, b = q; break;
+  }
+  return vec4(r, g, b, 1.0);
+}
+
 // ShaderModelType Subroutines
 subroutine( ShaderModelType )
 vec4 shadeSimpleWireFrame()
@@ -242,6 +264,24 @@ vec4 shadeTexturedAndOverlayAndLit()
     phongModel( ambientAndDiff, spec );
     vec4 color = vec4( ambientAndDiff, 1.0 ) * texColor + vec4( spec, 1.0 );
     return color;
+}
+
+subroutine( ShaderModelType )
+vec4 shadeTrendPlunge()
+{
+    vec3 n = normalize(worldNormal);
+    if(n.y < 0) n = -1*n;
+
+    float trend;
+    trend = atan(n.x, n.z+1E-18) / (2*M_PI);
+    if(trend < 0) trend += 1;
+
+    float plunge = 1 - n.y;
+    plunge = max(plunge, 0.25);
+
+    vec4 color = HSVtoRGB(trend, plunge, 1.0); 
+    //vec4 color = linearGradient(1.25*colorStop5*plunge);
+    return wireFrame( color, 0.7 * color );
 }
 
 void main()
